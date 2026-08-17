@@ -21,6 +21,7 @@ import com.gns.billing.model.ProfileResponse
 import com.gns.billing.model.RouterResponse
 import com.gns.billing.tagihan.DetailTagihanResponse
 import com.gns.billing.tagihan.TagihanResponse
+import com.gns.billing.tagihan.TagihanWhatsappResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -104,6 +105,11 @@ interface ApiService {
 
     @GET("tagihan/jatuh-tempo-all")
     suspend fun getTagihanJatuhTempoList(): TagihanResponse
+
+    @GET("tagihan/{id}/whatsapp")
+    suspend fun getTagihanWhatsapp(
+        @Path("id") id: Int
+    ): TagihanWhatsappResponse
 
     @GET("pembayaran/{id}")
     suspend fun getDetailPembayaran(
