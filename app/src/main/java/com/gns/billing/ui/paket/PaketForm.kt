@@ -29,42 +29,15 @@ fun PaketForm(
     onRouterChanged: (Router) -> Unit,
     onSave: (PaketRequest) -> Unit
 ) {
-
-    var namaPaket by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var harga by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var status by rememberSaveable {
-        mutableStateOf("Aktif")
-    }
-
-    var keterangan by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var selectedRouter by remember {
-        mutableStateOf<Router?>(null)
-    }
-
-    var selectedProfile by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var kecepatan by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var routerExpanded by remember {
-        mutableStateOf(false)
-    }
-
-    var profileExpanded by remember {
-        mutableStateOf(false)
-    }
+    var namaPaket by rememberSaveable { mutableStateOf("") }
+    var harga by rememberSaveable { mutableStateOf("") }
+    var status by rememberSaveable { mutableStateOf("Aktif") }
+    var keterangan by rememberSaveable { mutableStateOf("") }
+    var selectedRouter by remember { mutableStateOf<Router?>(null) }
+    var selectedProfile by rememberSaveable { mutableStateOf("") }
+    var kecepatan by rememberSaveable { mutableStateOf("") }
+    var routerExpanded by remember { mutableStateOf(false) }
+    var profileExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(
         initialNama,
@@ -76,16 +49,13 @@ fun PaketForm(
         initialRouter
     ) {
         namaPaket = initialNama
-
-        // Format harga awal jika ada dari data edit
-        if (initialHarga.isNotBlank()) {
-            val cleanInit = initialHarga.filter { c -> c.isDigit() }
+        harga = if (initialHarga.isNotBlank()) {
+            val cleanInit = initialHarga.filter { it.isDigit() }
             val parsedInit = cleanInit.toLongOrNull() ?: 0L
-            harga = java.text.DecimalFormat("#,###").format(parsedInit)
+            java.text.DecimalFormat("#,###").format(parsedInit)
         } else {
-            harga = ""
+            ""
         }
-
         status = initialStatus
         keterangan = initialKeterangan
         selectedRouter = initialRouter
@@ -123,11 +93,8 @@ fun PaketForm(
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = routerExpanded)
                 },
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
-
             ExposedDropdownMenu(
                 expanded = routerExpanded,
                 onDismissRequest = { routerExpanded = false }
@@ -152,9 +119,7 @@ fun PaketForm(
         ExposedDropdownMenuBox(
             expanded = profileExpanded,
             onExpandedChange = {
-                if (selectedRouter != null) {
-                    profileExpanded = !profileExpanded
-                }
+                if (selectedRouter != null) profileExpanded = !profileExpanded
             }
         ) {
             OutlinedTextField(
@@ -167,11 +132,8 @@ fun PaketForm(
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = profileExpanded)
                 },
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
-
             ExposedDropdownMenu(
                 expanded = profileExpanded,
                 onDismissRequest = { profileExpanded = false }
@@ -182,16 +144,8 @@ fun PaketForm(
                         onClick = {
                             selectedProfile = profile
                             profileExpanded = false
-
-                            // Otomatis ubah profil (misal C10) menjadi format 10 Mbps
-                            val cleaned = profile.replace(Regex("^[cC]"), "").trim()
-                            kecepatan = if (cleaned.lowercase().contains("mbps")) {
-                                cleaned
-                            } else if (cleaned.isNotBlank()) {
-                                "$cleaned Mbps"
-                            } else {
-                                ""
-                            }
+                            // Kecepatan ditentukan server dari profile MikroTik.
+                            kecepatan = ""
                         }
                     )
                 }
@@ -204,7 +158,8 @@ fun PaketForm(
             value = kecepatan,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Kecepatan") },
+            label = { Text("Kecepatan (ditentukan server)") },
+            supportingText = { Text("Server akan mengisi kecepatan berdasarkan PPP Profile saat disimpan.") },
             shape = RoundedCornerShape(16.dp),
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
@@ -215,12 +170,11 @@ fun PaketForm(
         OutlinedTextField(
             value = harga,
             onValueChange = { input ->
-                val cleanString = input.filter { c -> c.isDigit() }
-                if (cleanString.isNotEmpty()) {
-                    val parsed = cleanString.toLongOrNull() ?: 0L
-                    harga = java.text.DecimalFormat("#,###").format(parsed)
+                val cleanString = input.filter { it.isDigit() }
+                harga = if (cleanString.isNotEmpty()) {
+                    java.text.DecimalFormat("#,###").format(cleanString.toLongOrNull() ?: 0L)
                 } else {
-                    harga = ""
+                    ""
                 }
             },
             label = { Text("Harga") },
@@ -232,7 +186,6 @@ fun PaketForm(
         Spacer(modifier = Modifier.height(16.dp))
 
         var statusExpanded by remember { mutableStateOf(false) }
-
         ExposedDropdownMenuBox(
             expanded = statusExpanded,
             onExpandedChange = { statusExpanded = !statusExpanded }
@@ -246,11 +199,8 @@ fun PaketForm(
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded)
                 },
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
-
             ExposedDropdownMenu(
                 expanded = statusExpanded,
                 onDismissRequest = { statusExpanded = false }
@@ -297,32 +247,26 @@ fun PaketForm(
         Button(
             onClick = {
                 val router = selectedRouter ?: return@Button
+                val cleanHarga = harga.replace(".", "").replace(",", "").toDoubleOrNull() ?: 0.0
 
-                // Bersihkan titik ribuan sebelum dikirim ke request API/Database
-                val cleanHarga = harga.replace(".", "").toDoubleOrNull() ?: 0.0
-
-                val request = PaketRequest(
-                    router_id = router.id,
-                    nama_paket = namaPaket.trim(),
-                    profile_mikrotik = selectedProfile,
-                    kecepatan = kecepatan,
-                    harga = cleanHarga,
-                    status = status,
-                    keterangan = if (keterangan.isBlank()) null else keterangan.trim()
+                onSave(
+                    PaketRequest(
+                        router_id = router.id,
+                        nama_paket = namaPaket.trim(),
+                        profile_mikrotik = selectedProfile,
+                        kecepatan = kecepatan.ifBlank { null },
+                        harga = cleanHarga,
+                        status = status,
+                        keterangan = if (keterangan.isBlank()) null else keterangan.trim()
+                    )
                 )
-                onSave(request)
             },
             enabled = validForm && !loading,
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
+            modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
             if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp
-                )
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Menyimpan...")
             } else {
