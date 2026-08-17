@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.WhatsApp
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -63,7 +63,6 @@ fun TagihanScreen(
         }
     }
 
-    // Filter daftar tagihan berdasarkan pencarian (nama pelanggan atau nomor invoice)
     val filteredList = tagihanList.filter {
         it.pelanggan_nama?.contains(searchQuery, ignoreCase = true) == true ||
                 it.invoice_no.contains(searchQuery, ignoreCase = true)
@@ -199,7 +198,7 @@ fun TagihanScreen(
                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.WhatsApp,
+                                            imageVector = Icons.Default.Send,
                                             contentDescription = "WhatsApp",
                                             modifier = Modifier.size(18.dp)
                                         )
