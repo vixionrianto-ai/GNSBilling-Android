@@ -9,7 +9,6 @@ data class PelangganRequest(
     val status: String,
     val username_pppoe: String,
     val password_pppoe: String,
-    val kode_pelanggan: String? = null,
     val ip_address: String? = null,
     val mac_address: String? = null,
     val tanggal_pasang: String? = null,
