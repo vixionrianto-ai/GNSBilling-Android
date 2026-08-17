@@ -78,40 +78,44 @@ fun EditPelangganScreen(
                 CircularProgressIndicator()
             }
         } else {
-            val router = routers.firstOrNull { it.id == detail!!.router_id }
-                ?: detail!!.router
-                ?: routers.firstOrNull()
+            val router = routers.firstOrNull { it.id == detail!!.router_id } ?: detail!!.router
+            val paket = pakets.firstOrNull { it.id == detail!!.paket_id } ?: detail!!.paket
 
-            val paket = pakets.firstOrNull { it.id == detail!!.paket_id }
-                ?: detail!!.paket
-                ?: pakets.firstOrNull()
-
-            Box(modifier = Modifier.padding(paddingValues)) {
-                PelangganForm(
-                    routers = routers,
-                    pakets = pakets,
-                    loading = loading,
-                    initialNama = detail!!.nama,
-                    initialNoHp = detail!!.no_hp ?: "",
-                    initialAlamat = detail!!.alamat ?: "",
-                    initialRouter = router,
-                    initialPaket = paket,
-                    initialUsername = detail!!.username_pppoe ?: "",
-                    initialPassword = detail!!.password_pppoe ?: "",
-                    initialIp = detail!!.ip_address ?: "",
-                    initialMac = detail!!.mac_address ?: "",
-                    initialStatus = detail!!.status,
-                    initialKode = detail!!.kode_pelanggan,
-                    // --- PERBAIKAN: KONEKSI KAN SELURUH DATA BAGIAN BAWAH ---
-                    initialTanggalPasang = detail!!.tanggal_pasang ?: "",
-                    initialTanggalAktif = detail!!.tanggal_aktif ?: "",
-                    initialKeterangan = detail!!.keterangan ?: "",
-                    initialIsolationDefault = detail!!.isolation_use_default ?: true,
-                    initialIsolationLimit = detail!!.isolation_period_limit ?: 2,
-                    onSave = { updatedRequest ->
-                        pelangganVM.updatePelanggan(pelangganId, updatedRequest)
-                    }
-                )
+            if (router == null || paket == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Data router atau paket pelanggan tidak tersedia dari server.")
+                }
+            } else {
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    PelangganForm(
+                        routers = routers,
+                        pakets = pakets,
+                        loading = loading,
+                        initialNama = detail!!.nama,
+                        initialNoHp = detail!!.no_hp ?: "",
+                        initialAlamat = detail!!.alamat ?: "",
+                        initialRouter = router,
+                        initialPaket = paket,
+                        initialUsername = detail!!.username_pppoe ?: "",
+                        initialPassword = detail!!.password_pppoe ?: "",
+                        initialIp = detail!!.ip_address ?: "",
+                        initialMac = detail!!.mac_address ?: "",
+                        initialStatus = detail!!.status,
+                        initialTanggalPasang = detail!!.tanggal_pasang ?: "",
+                        initialTanggalAktif = detail!!.tanggal_aktif ?: "",
+                        initialKeterangan = detail!!.keterangan ?: "",
+                        initialIsolationDefault = detail!!.isolation_use_default ?: true,
+                        initialIsolationLimit = detail!!.isolation_period_limit ?: 2,
+                        onSave = { updatedRequest ->
+                            pelangganVM.updatePelanggan(pelangganId, updatedRequest)
+                        }
+                    )
+                }
             }
         }
     }
