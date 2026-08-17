@@ -41,17 +41,11 @@ fun PelangganForm(
     initialTanggalPasang: String = "",
     initialTanggalAktif: String = "",
     initialStatus: String = "Aktif",
-    initialKode: String = "",
     initialKeterangan: String = "",
     initialIsolationDefault: Boolean = true,
     initialIsolationLimit: Int = 2,
     onSave: (PelangganRequest) -> Unit
 ) {
-    val todayDateString = remember {
-        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-    }
-
-    var kode by remember(initialKode) { mutableStateOf(initialKode) }
     var nama by remember(initialNama) { mutableStateOf(initialNama) }
     var noHp by remember(initialNoHp) { mutableStateOf(initialNoHp) }
     var alamat by remember(initialAlamat) { mutableStateOf(initialAlamat) }
@@ -61,54 +55,27 @@ fun PelangganForm(
     var password by remember(initialPassword) { mutableStateOf(initialPassword) }
     var ipAddress by remember(initialIp) { mutableStateOf(initialIp) }
     var macAddress by remember(initialMac) { mutableStateOf(initialMac) }
-
-    var tanggalPasang by remember(initialTanggalPasang) {
-        mutableStateOf(if (initialTanggalPasang.isNotBlank()) initialTanggalPasang else todayDateString)
-    }
-    var tanggalAktif by remember(initialTanggalAktif) {
-        mutableStateOf(if (initialTanggalAktif.isNotBlank()) initialTanggalAktif else todayDateString)
-    }
-
+    var tanggalPasang by remember(initialTanggalPasang) { mutableStateOf(initialTanggalPasang) }
+    var tanggalAktif by remember(initialTanggalAktif) { mutableStateOf(initialTanggalAktif) }
     var status by remember(initialStatus) { mutableStateOf(initialStatus) }
     var keterangan by remember(initialKeterangan) { mutableStateOf(initialKeterangan) }
     var useDefaultIsolation by remember(initialIsolationDefault) { mutableStateOf(initialIsolationDefault) }
     var isolationLimit by remember(initialIsolationLimit) { mutableStateOf(initialIsolationLimit.toString()) }
 
-    // --- SINKRONISASI DROPDOWN ---
-    LaunchedEffect(initialPaket, initialRouter, pakets, routers) {
-        if (initialPaket != null) {
-            paket = initialPaket
-        } else if (paket == null && pakets.isNotEmpty()) {
-            paket = pakets.firstOrNull()
-        }
-
-        if (initialRouter != null) {
-            router = initialRouter
-        } else if (router == null && routers.isNotEmpty()) {
-            router = routers.firstOrNull()
-        }
-    }
-
-    // --- SINKRONISASI SELURUH KOLOM TEKS (ATAS SAMPAI BAWAH) ---
-    LaunchedEffect(
-        initialNama, initialNoHp, initialAlamat, initialUsername,
-        initialIp, initialMac, initialStatus, initialKode,
-        initialTanggalPasang, initialTanggalAktif, initialKeterangan,
-        initialIsolationDefault, initialIsolationLimit
-    ) {
-        if (nama.isBlank() && initialNama.isNotBlank()) nama = initialNama
-        if (noHp.isBlank() && initialNoHp.isNotBlank()) noHp = initialNoHp
-        if (alamat.isBlank() && initialAlamat.isNotBlank()) alamat = initialAlamat
-        if (username.isBlank() && initialUsername.isNotBlank()) username = initialUsername
-        if (ipAddress.isBlank() && initialIp.isNotBlank()) ipAddress = initialIp
-        if (macAddress.isBlank() && initialMac.isNotBlank()) macAddress = initialMac
-        if (initialStatus.isNotBlank()) status = initialStatus
-        if (kode.isBlank() && initialKode.isNotBlank()) kode = initialKode
-
-        // --- AUTO-FILL KOLOM BAGIAN BAWAH ---
-        if (initialTanggalPasang.isNotBlank()) tanggalPasang = initialTanggalPasang
-        if (initialTanggalAktif.isNotBlank()) tanggalAktif = initialTanggalAktif
-        if (initialKeterangan.isNotBlank()) keterangan = initialKeterangan
+    LaunchedEffect(initialPaket, initialRouter, initialNama, initialNoHp, initialAlamat, initialUsername, initialPassword, initialIp, initialMac, initialTanggalPasang, initialTanggalAktif, initialStatus, initialKeterangan, initialIsolationDefault, initialIsolationLimit) {
+        if (initialPaket != null) paket = initialPaket
+        if (initialRouter != null) router = initialRouter
+        nama = initialNama
+        noHp = initialNoHp
+        alamat = initialAlamat
+        username = initialUsername
+        password = initialPassword
+        ipAddress = initialIp
+        macAddress = initialMac
+        tanggalPasang = initialTanggalPasang
+        tanggalAktif = initialTanggalAktif
+        status = initialStatus
+        keterangan = initialKeterangan
         useDefaultIsolation = initialIsolationDefault
         isolationLimit = initialIsolationLimit.toString()
     }
@@ -116,23 +83,16 @@ fun PelangganForm(
     var paketExpanded by remember { mutableStateOf(false) }
     var routerExpanded by remember { mutableStateOf(false) }
     var statusExpanded by remember { mutableStateOf(false) }
-
     var showDatePickerPasang by remember { mutableStateOf(false) }
     var showDatePickerAktif by remember { mutableStateOf(false) }
 
-    val datePickerStatePasang = rememberDatePickerState(
-        initialSelectedDateMillis = System.currentTimeMillis()
-    )
-    val datePickerStateAktif = rememberDatePickerState(
-        initialSelectedDateMillis = System.currentTimeMillis()
-    )
-
+    val datePickerStatePasang = rememberDatePickerState()
+    val datePickerStateAktif = rememberDatePickerState()
     val dateFormatUtc = remember {
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
     }
-
     val scrollState = rememberScrollState()
 
     if (showDatePickerPasang) {
@@ -140,18 +100,12 @@ fun PelangganForm(
             onDismissRequest = { showDatePickerPasang = false },
             confirmButton = {
                 TextButton(onClick = {
-                    datePickerStatePasang.selectedDateMillis?.let {
-                        tanggalPasang = dateFormatUtc.format(Date(it))
-                    }
+                    datePickerStatePasang.selectedDateMillis?.let { tanggalPasang = dateFormatUtc.format(Date(it)) }
                     showDatePickerPasang = false
                 }) { Text("Pilih") }
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePickerPasang = false }) { Text("Batal") }
-            }
-        ) {
-            DatePicker(state = datePickerStatePasang)
-        }
+            dismissButton = { TextButton(onClick = { showDatePickerPasang = false }) { Text("Batal") } }
+        ) { DatePicker(state = datePickerStatePasang) }
     }
 
     if (showDatePickerAktif) {
@@ -159,49 +113,22 @@ fun PelangganForm(
             onDismissRequest = { showDatePickerAktif = false },
             confirmButton = {
                 TextButton(onClick = {
-                    datePickerStateAktif.selectedDateMillis?.let {
-                        tanggalAktif = dateFormatUtc.format(Date(it))
-                    }
+                    datePickerStateAktif.selectedDateMillis?.let { tanggalAktif = dateFormatUtc.format(Date(it)) }
                     showDatePickerAktif = false
                 }) { Text("Pilih") }
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePickerAktif = false }) { Text("Batal") }
-            }
-        ) {
-            DatePicker(state = datePickerStateAktif)
-        }
+            dismissButton = { TextButton(onClick = { showDatePickerAktif = false }) { Text("Batal") } }
+        ) { DatePicker(state = datePickerStateAktif) }
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         FormSection(title = "Data Pelanggan", icon = Icons.Default.Person) {
-            ElegantTextField(
-                value = nama,
-                onValueChange = { nama = it },
-                label = "Nama Pelanggan *",
-                icon = Icons.Default.Badge
-            )
-            ElegantTextField(
-                value = noHp,
-                onValueChange = { noHp = it },
-                label = "Nomor HP / WhatsApp *",
-                icon = Icons.Default.Phone,
-                placeholder = "Contoh: 081234567890"
-            )
-            ElegantTextField(
-                value = alamat,
-                onValueChange = { alamat = it },
-                label = "Alamat Pemasangan",
-                icon = Icons.Default.LocationOn,
-                singleLine = false,
-                minLines = 2
-            )
+            ElegantTextField(nama, { nama = it }, "Nama Pelanggan *", Icons.Default.Badge)
+            ElegantTextField(noHp, { noHp = it }, "Nomor HP / WhatsApp *", Icons.Default.Phone, placeholder = "Contoh: 081234567890")
+            ElegantTextField(alamat, { alamat = it }, "Alamat Pemasangan", Icons.Default.LocationOn, singleLine = false, minLines = 2)
         }
 
         FormSection(title = "Layanan Internet", icon = Icons.Default.Language) {
@@ -212,23 +139,17 @@ fun PelangganForm(
                 ElegantTextField(
                     value = paket?.nama_paket ?: "",
                     onValueChange = {},
-                    readOnly = true,
                     label = "Paket Internet *",
                     icon = Icons.Default.Layers,
+                    readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = paketExpanded) },
                     modifier = Modifier.menuAnchor()
                 )
-                ExposedDropdownMenu(
-                    expanded = paketExpanded,
-                    onDismissRequest = { paketExpanded = false }
-                ) {
+                ExposedDropdownMenu(paketExpanded, { paketExpanded = false }) {
                     pakets.forEach { item ->
                         DropdownMenuItem(
                             text = { Text(item.nama_paket) },
-                            onClick = {
-                                paket = item
-                                paketExpanded = false
-                            }
+                            onClick = { paket = item; paketExpanded = false }
                         )
                     }
                 }
@@ -241,23 +162,17 @@ fun PelangganForm(
                 ElegantTextField(
                     value = router?.nama_router ?: "",
                     onValueChange = {},
-                    readOnly = true,
                     label = "Router MikroTik *",
                     icon = Icons.Default.Router,
+                    readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = routerExpanded) },
                     modifier = Modifier.menuAnchor()
                 )
-                ExposedDropdownMenu(
-                    expanded = routerExpanded,
-                    onDismissRequest = { routerExpanded = false }
-                ) {
+                ExposedDropdownMenu(routerExpanded, { routerExpanded = false }) {
                     routers.forEach { item ->
                         DropdownMenuItem(
                             text = { Text(item.nama_router) },
-                            onClick = {
-                                router = item
-                                routerExpanded = false
-                            }
+                            onClick = { router = item; routerExpanded = false }
                         )
                     }
                 }
@@ -270,23 +185,17 @@ fun PelangganForm(
                 ElegantTextField(
                     value = status,
                     onValueChange = {},
-                    readOnly = true,
                     label = "Status Layanan *",
                     icon = Icons.Default.Info,
+                    readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
                     modifier = Modifier.menuAnchor()
                 )
-                ExposedDropdownMenu(
-                    expanded = statusExpanded,
-                    onDismissRequest = { statusExpanded = false }
-                ) {
+                ExposedDropdownMenu(statusExpanded, { statusExpanded = false }) {
                     listOf("Aktif", "Isolir", "Nonaktif").forEach { item ->
                         DropdownMenuItem(
                             text = { Text(item) },
-                            onClick = {
-                                status = item
-                                statusExpanded = false
-                            }
+                            onClick = { status = item; statusExpanded = false }
                         )
                     }
                 }
@@ -294,129 +203,45 @@ fun PelangganForm(
         }
 
         FormSection(title = "Konfigurasi Teknis (PPPoE / IP)", icon = Icons.Default.Settings) {
-            ElegantTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = "Username PPPoE",
-                icon = Icons.Default.AccountCircle
-            )
-            ElegantTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = "Password PPPoE",
-                icon = Icons.Default.Password
-            )
-            ElegantTextField(
-                value = ipAddress,
-                onValueChange = { ipAddress = it },
-                label = "IP Address (Opsional)",
-                icon = Icons.Default.Dns,
-                placeholder = "Contoh: 192.168.10.2"
-            )
-            ElegantTextField(
-                value = macAddress,
-                onValueChange = { macAddress = it },
-                label = "MAC Address Router/Modem (Opsional)",
-                icon = Icons.Default.Pin,
-                placeholder = "AA:BB:CC:DD:EE:FF"
-            )
+            ElegantTextField(username, { username = it }, "Username PPPoE", Icons.Default.AccountCircle)
+            ElegantTextField(password, { password = it }, "Password PPPoE", Icons.Default.Password)
+            ElegantTextField(ipAddress, { ipAddress = it }, "IP Address (Opsional)", Icons.Default.Dns, placeholder = "Contoh: 192.168.10.2")
+            ElegantTextField(macAddress, { macAddress = it }, "MAC Address Router/Modem (Opsional)", Icons.Default.Pin, placeholder = "AA:BB:CC:DD:EE:FF")
         }
 
         FormSection(title = "Aktivasi & Penagihan", icon = Icons.Default.Event) {
             val interactionSourcePasang = remember { MutableInteractionSource() }
             val isPressedPasang by interactionSourcePasang.collectIsPressedAsState()
-
-            LaunchedEffect(isPressedPasang) {
-                if (isPressedPasang) showDatePickerPasang = true
-            }
-
-            ElegantTextField(
-                value = tanggalPasang,
-                onValueChange = { tanggalPasang = it },
-                label = "Tanggal Pasang",
-                icon = Icons.Default.CalendarToday,
-                readOnly = true,
-                interactionSource = interactionSourcePasang
-            )
+            LaunchedEffect(isPressedPasang) { if (isPressedPasang) showDatePickerPasang = true }
+            ElegantTextField(tanggalPasang, { tanggalPasang = it }, "Tanggal Pasang", Icons.Default.CalendarToday, readOnly = true, interactionSource = interactionSourcePasang)
 
             val interactionSourceAktif = remember { MutableInteractionSource() }
             val isPressedAktif by interactionSourceAktif.collectIsPressedAsState()
+            LaunchedEffect(isPressedAktif) { if (isPressedAktif) showDatePickerAktif = true }
+            ElegantTextField(tanggalAktif, { tanggalAktif = it }, "Tanggal Aktif", Icons.Default.EventAvailable, readOnly = true, interactionSource = interactionSourceAktif)
 
-            LaunchedEffect(isPressedAktif) {
-                if (isPressedAktif) showDatePickerAktif = true
-            }
-
-            ElegantTextField(
-                value = tanggalAktif,
-                onValueChange = { tanggalAktif = it },
-                label = "Tanggal Aktif",
-                icon = Icons.Default.EventAvailable,
-                readOnly = true,
-                interactionSource = interactionSourceAktif
-            )
-
-            Text(
-                text = "Batas Waktu Isolir",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Text("Batas Waktu Isolir", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = useDefaultIsolation,
-                    onClick = { useDefaultIsolation = true }
-                )
-                Text(
-                    text = "Default Sistem",
-                    modifier = Modifier.clickable { useDefaultIsolation = true }
-                )
+                RadioButton(selected = useDefaultIsolation, onClick = { useDefaultIsolation = true })
+                Text("Default Sistem", modifier = Modifier.clickable { useDefaultIsolation = true })
                 Spacer(Modifier.width(16.dp))
-                RadioButton(
-                    selected = !useDefaultIsolation,
-                    onClick = { useDefaultIsolation = false }
-                )
-                Text(
-                    text = "Batas Khusus",
-                    modifier = Modifier.clickable { useDefaultIsolation = false }
-                )
+                RadioButton(selected = !useDefaultIsolation, onClick = { useDefaultIsolation = false })
+                Text("Batas Khusus", modifier = Modifier.clickable { useDefaultIsolation = false })
             }
-
             if (!useDefaultIsolation) {
-                ElegantTextField(
-                    value = isolationLimit,
-                    onValueChange = { isolationLimit = it },
-                    label = "Periode Isolir (Hari)",
-                    icon = Icons.Default.Timer
-                )
+                ElegantTextField(isolationLimit, { isolationLimit = it }, "Periode Isolir (Hari)", Icons.Default.Timer)
             }
         }
 
         FormSection(title = "Catatan Tambahan", icon = Icons.Default.MoreHoriz) {
-            ElegantTextField(
-                value = keterangan,
-                onValueChange = { keterangan = it },
-                label = "Keterangan / Catatan Teknis",
-                icon = Icons.Default.Description,
-                singleLine = false,
-                minLines = 3
-            )
+            ElegantTextField(keterangan, { keterangan = it }, "Keterangan / Catatan Teknis", Icons.Default.Description, singleLine = false, minLines = 3)
         }
 
-        val validForm = nama.trim().isNotBlank() &&
-                noHp.trim().isNotBlank() &&
-                paket != null &&
-                router != null
+        val validForm = nama.trim().isNotBlank() && noHp.trim().isNotBlank() && paket != null && router != null
 
         Button(
             onClick = {
                 if (!validForm) return@Button
-
-                val finalKode = if (kode.trim().isNotBlank()) {
-                    kode.trim()
-                } else {
-                    "PLG-" + SimpleDateFormat("yyMMddHHmmss", Locale.getDefault()).format(Date())
-                }
-
                 onSave(
                     PelangganRequest(
                         nama = nama.trim(),
@@ -431,7 +256,6 @@ fun PelangganForm(
                         mac_address = macAddress.trim().ifBlank { null },
                         tanggal_pasang = tanggalPasang.ifBlank { null },
                         tanggal_aktif = tanggalAktif.ifBlank { null },
-                        kode_pelanggan = finalKode,
                         keterangan = keterangan.trim().ifBlank { null },
                         isolation_use_default = useDefaultIsolation,
                         isolation_period_limit = if (useDefaultIsolation) null else isolationLimit.toIntOrNull()
@@ -439,25 +263,15 @@ fun PelangganForm(
                 )
             },
             enabled = !loading && validForm,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = MaterialTheme.shapes.medium
         ) {
             if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.5.dp
-                )
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.5.dp)
                 Spacer(Modifier.width(12.dp))
                 Text("Memproses...")
             } else {
-                Text(
-                    text = "Simpan Data Pelanggan",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Simpan Data Pelanggan", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -466,35 +280,18 @@ fun PelangganForm(
 }
 
 @Composable
-fun FormSection(
-    title: String,
-    icon: ImageVector,
-    content: @Composable ColumnScope.() -> Unit
-) {
+fun FormSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             content()
@@ -521,13 +318,7 @@ fun ElegantTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        leadingIcon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        },
+        leadingIcon = { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
         trailingIcon = trailingIcon,
         modifier = modifier.fillMaxWidth(),
         placeholder = placeholder?.let { { Text(it) } },
