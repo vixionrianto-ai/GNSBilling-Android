@@ -12,44 +12,32 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.gns.billing.utils.formatRupiah
-import com.gns.billing.viewmodel.DashboardViewModel
 import com.gns.billing.viewmodel.PembayaranViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LaporanScreen(
     navController: NavController,
-    viewModel: PembayaranViewModel = viewModel(),
-    dashboardViewModel: DashboardViewModel = viewModel()
+    viewModel: PembayaranViewModel = viewModel()
 ) {
     val historyList by viewModel.historyList.collectAsState()
     val summary by viewModel.summary.collectAsState()
-    val dashboardRes by dashboardViewModel.dashboard.collectAsState()
     val isLoading by viewModel.loading.collectAsState()
     val context = LocalContext.current
-
     var showFilterDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadHistory()
         viewModel.loadSummary()
-        dashboardViewModel.loadDashboard()
     }
 
-    val dData = dashboardRes?.data
-    val pendapatanBulanDashboard = dData?.pendapatanBulanIni?.toDoubleOrNull() ?: 0.0
-    val piutangDashboard = dData?.totalPiutang?.toDoubleOrNull() ?: 1950000.0
-    val lunasDashboard = dData?.tagihanLunas ?: 65
-
-    // Diperbaiki: Mengambil langsung dari fungsi summary model yang aman tanpa memanggil dData yang error
-    val pelangganAktifCount = summary?.getPelangganAktifCount() ?: 78
+    val data = summary?.data
 
     Scaffold(
         topBar = {
@@ -74,123 +62,33 @@ fun LaporanScreen(
         }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
-            if (isLoading && dashboardRes == null) {
+            if (isLoading && summary == null) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Baris 1: Pendapatan Hari Ini & Pendapatan Bulan
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Card(
-                                    modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text(text = "PENDAPATAN HARI INI", style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = formatRupiah(summary?.getPendapatanHariIniDouble() ?: pendapatanBulanDashboard),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
+                            SummaryCard("Pendapatan Hari Ini", formatRupiah(summary?.getPendapatanHariIniDouble() ?: 0.0))
+                            SummaryCard("Pendapatan Bulan Ini", formatRupiah(summary?.getPendapatanBulanDouble() ?: 0.0))
+                            SummaryCard("Total Tagihan", formatRupiah(summary?.getTotalTagihanDouble() ?: 0.0))
+                            SummaryCard("Piutang", formatRupiah(summary?.getPiutangDouble() ?: 0.0))
 
-                                Card(
-                                    modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text(text = "PENDAPATAN BULAN", style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = formatRupiah(pendapatanBulanDashboard),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Baris 2: Total Tagihan & Piutang
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Card(
-                                    modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text(text = "TOTAL TAGIHAN", style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = formatRupiah(pendapatanBulanDashboard),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-
-                                Card(
-                                    modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text(text = "PIUTANG", style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = formatRupiah(piutangDashboard),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFFE65100)
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Baris 3: Statistik Pelanggan & Status Tagihan
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(text = "Statistik Sistem", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column {
-                                            Text(text = "Pelanggan Aktif", style = MaterialTheme.typography.bodySmall)
-                                            Text(text = "$pelangganAktifCount", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
-                                        }
-                                        Column {
-                                            Text(text = "Lunas", style = MaterialTheme.typography.bodySmall)
-                                            Text(text = "$lunasDashboard", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = Color(0xFF2E7D32))
-                                        }
-                                        Column {
-                                            Text(text = "Jatuh Tempo", style = MaterialTheme.typography.bodySmall)
-                                            Text(text = "${summary?.data?.jatuh_tempo ?: 18}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = Color(0xFFC62828))
-                                        }
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Text("Statistik Sistem", fontWeight = FontWeight.Bold)
+                                    HorizontalDivider()
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        StatValue("Pelanggan Aktif", data?.pelanggan_aktif ?: 0)
+                                        StatValue("Lunas", data?.lunas ?: 0)
+                                        StatValue("Jatuh Tempo", data?.jatuh_tempo ?: 0)
                                     }
                                 }
                             }
@@ -198,7 +96,6 @@ fun LaporanScreen(
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Riwayat Transaksi Masuk",
                             style = MaterialTheme.typography.titleSmall,
@@ -210,49 +107,25 @@ fun LaporanScreen(
                     if (historyList.isEmpty()) {
                         item {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
+                                modifier = Modifier.fillMaxWidth().padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "Belum ada data laporan transaksi.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text("Belum ada data laporan transaksi.")
                             }
                         }
                     } else {
                         items(historyList) { item ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                            ) {
+                            Card(modifier = Modifier.fillMaxWidth()) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Text(
-                                            text = item.getNamaPelanggan(),
-                                            fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.bodyLarge
-                                        )
-                                        Text(
-                                            text = "INV: ${item.invoice_no ?: "-"}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Text(item.getNamaPelanggan(), fontWeight = FontWeight.Bold)
+                                        Text("INV: ${item.invoice_no ?: "-"}", style = MaterialTheme.typography.bodySmall)
                                     }
-                                    Text(
-                                        text = formatRupiah(item.getNominalDouble()),
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    Text(formatRupiah(item.getNominalDouble()), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -260,5 +133,35 @@ fun LaporanScreen(
                 }
             }
         }
+    }
+
+    if (showFilterDialog) {
+        AlertDialog(
+            onDismissRequest = { showFilterDialog = false },
+            title = { Text("Filter Laporan") },
+            text = { Text("Filter laporan tetap mengikuti parameter dan data yang disediakan API server.") },
+            confirmButton = {
+                TextButton(onClick = { showFilterDialog = false }) { Text("Tutup") }
+            }
+        )
+    }
+}
+
+@Composable
+private fun SummaryCard(label: String, value: String) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(label, style = MaterialTheme.typography.labelMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun StatValue(label: String, value: Int) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = MaterialTheme.typography.bodySmall)
+        Text(value.toString(), fontWeight = FontWeight.Bold)
     }
 }
