@@ -18,4 +18,8 @@ class TagihanRepository {
     suspend fun getSemuaTagihan(): TagihanResponse {
         return RetrofitClient.api.getSemuaTagihan()
     }
+
+    suspend fun getTagihanWhatsapp(id: Int): TagihanWhatsappResponse {
+        return RetrofitClient.api.getTagihanWhatsapp(id)
+    }
 }
