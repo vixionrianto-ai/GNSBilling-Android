@@ -6,10 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -55,9 +52,7 @@ fun TagihanJatuhTempoScreen(
         ) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
                 listJatuhTempo.isEmpty() -> {
@@ -76,16 +71,15 @@ fun TagihanJatuhTempoScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(vertical = 12.dp)
                     ) {
-                        items(listJatuhTempo) { item ->
+                        items(listJatuhTempo, key = { it.id }) { tagihan ->
                             TagihanJatuhTempoItem(
-                                item = item,
+                                tagihan = tagihan,
                                 onBayarClick = {
-                                    val tagihanId = item.pelangganId
-                                    val namaPelanggan = item.namaPelanggan
-                                    val invoiceNo = "INV-${item.pelangganId}"
-                                    val totalTagihan = item.totalTunggakan.toFloat()
-
-                                    navController?.navigate("pembayaran_screen/$tagihanId/$namaPelanggan/$invoiceNo/$totalTagihan")
+                                    val pelangganNama = tagihan.pelanggan_nama ?: "Pelanggan Umum"
+                                    val totalServer = if (tagihan.sisa > 0.0) tagihan.sisa else tagihan.total
+                                    navController?.navigate(
+                                        "pembayaran_screen/${tagihan.id}/$pelangganNama/${tagihan.invoice_no}/$totalServer"
+                                    )
                                 }
                             )
                         }
@@ -98,7 +92,7 @@ fun TagihanJatuhTempoScreen(
 
 @Composable
 fun TagihanJatuhTempoItem(
-    item: TagihanJatuhTempo,
+    tagihan: Tagihan,
     onBayarClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -112,7 +106,7 @@ fun TagihanJatuhTempoItem(
                 .padding(16.dp)
         ) {
             Text(
-                text = item.namaPelanggan,
+                text = tagihan.pelanggan_nama ?: "Pelanggan Umum",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -120,14 +114,19 @@ fun TagihanJatuhTempoItem(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "No. HP: ${item.noHp.ifEmpty { "-" }}",
+                text = "Invoice: ${tagihan.invoice_no}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Jatuh tempo: ${tagihan.tanggal_jatuh_tempo ?: "-"}",
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Bulan Tunggakan: ${item.listBulanTunggakan.joinToString(", ")}",
+                text = "Status: ${tagihan.status}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
@@ -140,7 +139,7 @@ fun TagihanJatuhTempoItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total: ${formatRupiah(item.totalTunggakan)}",
+                    text = "Sisa: ${formatRupiahServer(tagihan.sisa)}",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
@@ -157,8 +156,6 @@ fun TagihanJatuhTempoItem(
     }
 }
 
-private fun formatRupiah(number: Double): String {
-    val localeID = Locale("in", "ID")
-    val formatRupiah = NumberFormat.getCurrencyInstance(localeID)
-    return formatRupiah.format(number)
+private fun formatRupiahServer(number: Double): String {
+    return NumberFormat.getCurrencyInstance(Locale("in", "ID")).format(number)
 }
