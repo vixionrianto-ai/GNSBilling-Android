@@ -6,53 +6,66 @@ import androidx.lifecycle.viewModelScope
 import com.gns.billing.api.RetrofitClient
 import com.gns.billing.model.PembayaranHistoryItem
 import com.gns.billing.model.PembayaranRequest
+import com.gns.billing.model.PembayaranResult
 import com.gns.billing.model.PembayaranSummaryResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// 1. State lengkap sesuai kebutuhan PembayaranScreen.kt
+// UI hanya menyimpan input operator dan hasil resmi dari server.
 data class PembayaranUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
     val message: String? = null,
     val metode: String = "Cash",
-    val nominal: String = "0"
+    val nominal: String = "0",
+    val biayaAdmin: String = "0",
+    val keterangan: String = "",
+    val serverResult: PembayaranResult? = null
 )
 
 class PembayaranViewModel : ViewModel() {
 
-    // ==========================================
-    // STATE & FUNGSI UNTUK PEMBAYARAN SCREEN
-    // ==========================================
     private val _uiState = MutableStateFlow(PembayaranUiState())
     val uiState: StateFlow<PembayaranUiState> = _uiState
 
-    // Dipanggil oleh Dropdown Metode Pembayaran di PembayaranScreen.kt
     fun onMetodeChange(newMetode: String) {
         _uiState.update { it.copy(metode = newMetode) }
     }
 
-    // Dipanggil sebelum proses pembayaran di PembayaranScreen.kt
     fun onNominalChange(newNominal: String) {
         _uiState.update { it.copy(nominal = newNominal) }
     }
 
-    // Dipanggil oleh tombol "Proses & Lunasi Pembayaran"
+    fun onBiayaAdminChange(newBiayaAdmin: String) {
+        _uiState.update { it.copy(biayaAdmin = newBiayaAdmin) }
+    }
+
+    fun onKeteranganChange(newKeterangan: String) {
+        _uiState.update { it.copy(keterangan = newKeterangan) }
+    }
+
     fun submitPembayaran(tagihanId: Int) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, message = null) }
-            try {
-                // Membaca metode & nominal dari state saat ini
-                val currentMetode = _uiState.value.metode
-                val currentNominal = _uiState.value.nominal
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    message = null,
+                    isSuccess = false,
+                    serverResult = null
+                )
+            }
 
-                // PERBAIKAN: Konversi String ke Double menggunakan .toDoubleOrNull() ?: 0.0
+            try {
+                // Tidak ada perhitungan status/kembalian di Android.
+                // Laravel menjadi satu-satunya sumber perhitungan pembayaran.
                 val request = PembayaranRequest(
                     tagihan_id = tagihanId,
-                    dibayar = currentNominal.toDoubleOrNull() ?: 0.0,
-                    metode = currentMetode
+                    dibayar = _uiState.value.nominal.toDoubleOrNull() ?: 0.0,
+                    metode = _uiState.value.metode,
+                    biaya_admin = _uiState.value.biayaAdmin.toDoubleOrNull() ?: 0.0,
+                    keterangan = _uiState.value.keterangan.ifBlank { null }
                 )
 
                 val response = RetrofitClient.api.simpanPembayaran(request)
@@ -60,7 +73,8 @@ class PembayaranViewModel : ViewModel() {
                     it.copy(
                         isLoading = false,
                         isSuccess = response.success,
-                        message = response.message
+                        message = response.message,
+                        serverResult = response.data
                     )
                 }
             } catch (e: Exception) {
@@ -75,7 +89,6 @@ class PembayaranViewModel : ViewModel() {
         }
     }
 
-    // Dipanggil di LaunchedEffect PembayaranScreen.kt setelah Toast muncul
     fun resetMessage() {
         _uiState.update { it.copy(message = null) }
     }
@@ -84,9 +97,6 @@ class PembayaranViewModel : ViewModel() {
         _uiState.value = PembayaranUiState()
     }
 
-    // ==========================================
-    // STATE & FUNGSI UNTUK LAPORAN SCREEN
-    // ==========================================
     private val _historyList = MutableStateFlow<List<PembayaranHistoryItem>>(emptyList())
     val historyList: StateFlow<List<PembayaranHistoryItem>> = _historyList
 
