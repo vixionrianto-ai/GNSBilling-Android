@@ -1,5 +1,8 @@
 package com.gns.billing.tagihan
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,11 +10,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,9 +32,34 @@ fun DetailTagihanScreen(
 ) {
     val detailResponse by viewModel.detailTagihan.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val whatsappUrl by viewModel.whatsappUrl.collectAsState()
+    val whatsappError by viewModel.whatsappError.collectAsState()
+    val whatsappLoading by viewModel.whatsappLoading.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(tagihanId) {
         viewModel.loadDetailTagihan(tagihanId)
+    }
+
+    LaunchedEffect(whatsappUrl) {
+        val url = whatsappUrl
+        if (!url.isNullOrBlank()) {
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            } catch (e: Exception) {
+                Toast.makeText(context, "Gagal membuka WhatsApp", Toast.LENGTH_SHORT).show()
+            } finally {
+                viewModel.clearWhatsappUrl()
+            }
+        }
+    }
+
+    LaunchedEffect(whatsappError) {
+        val error = whatsappError
+        if (!error.isNullOrBlank()) {
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            viewModel.clearWhatsappError()
+        }
     }
 
     Scaffold(
@@ -147,9 +177,25 @@ fun DetailTagihanScreen(
                                 DetailInfoRow(label = "Sisa Tagihan", value = formatRupiah(tagihan.sisa))
                             }
                         }
+
+                        Button(
+                            onClick = { viewModel.loadTagihanWhatsapp(tagihan.id) },
+                            enabled = !whatsappLoading,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Send,
+                                contentDescription = "WhatsApp"
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("WhatsApp")
+                        }
                     }
 
-                    // Tombol Proses Pembayaran dengan pengiriman parameter data lengkap ke PembayaranScreen
+                    // Tombol Proses Pembayaran mengikuti aturan server:
+                    // hanya ditampilkan jika tagihan belum lunas.
                     val status = tagihan.status
                     if (!status.equals("Lunas", ignoreCase = true)) {
                         Surface(
@@ -165,7 +211,6 @@ fun DetailTagihanScreen(
                                     val inv = tagihan.invoice_no
                                     val total = if (tagihan.sisa > 0.0) tagihan.sisa else tagihan.total
 
-                                    // Mengarahkan ke rute pembayaran dengan parameter yang sesuai
                                     navController.navigate("pembayaran_screen/$tagihanId/$nama/$inv/$total")
                                 },
                                 modifier = Modifier
