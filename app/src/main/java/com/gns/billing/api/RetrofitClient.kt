@@ -9,7 +9,7 @@ import com.gns.billing.network.AuthInterceptor
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://192.168.1.2/GNS_DEV/public/api/"
+    private const val BASE_URL = "http://192.168.1.22/GNS_DEV/public/api/"
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(
