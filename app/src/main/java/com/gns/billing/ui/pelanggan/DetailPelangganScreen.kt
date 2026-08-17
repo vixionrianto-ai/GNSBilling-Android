@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.gns.billing.ui.components.MikroTikActionDialog // <-- Import Dialog MikroTik
+import com.gns.billing.ui.components.MikroTikActionDialog
 import com.gns.billing.viewmodel.PelangganViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,11 +38,7 @@ fun DetailPelangganScreen(
     val detail by viewModel.detailPelanggan.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
-
-    // State untuk mengontrol muncul/tutupnya Dialog Aksi MikroTik
     var showMikroTikDialog by remember { mutableStateOf(false) }
-
-    // Ambil context untuk menjalankan Intent Telepon & WA
     val context = LocalContext.current
 
     LaunchedEffect(pelangganId) {
@@ -79,7 +75,6 @@ fun DetailPelangganScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // --- 1. HEADER CARD DENGAN AVATAR & BADGE STATUS ---
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -92,7 +87,6 @@ fun DetailPelangganScreen(
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Avatar Inisial
                             val initial = p.nama.take(2).uppercase()
                             Box(
                                 modifier = Modifier
@@ -139,17 +133,22 @@ fun DetailPelangganScreen(
                         }
                     }
 
-                    // --- 2. AKSI CEPAT: WHATSAPP & TELEPON ---
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = {
-                                p.no_hp?.let { noHp ->
-                                    val pesan = "Halo Kak ${p.nama}, dari admin internet..."
-                                    openWhatsApp(context, noHp, pesan)
-                                } ?: Toast.makeText(context, "Nomor HP tidak tersedia", Toast.LENGTH_SHORT).show()
+                                val url = p.whatsapp_url
+                                if (url.isNullOrBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Nomor WhatsApp tidak tersedia",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    openWhatsApp(context, url)
+                                }
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
@@ -173,7 +172,6 @@ fun DetailPelangganScreen(
                         }
                     }
 
-                    // --- 3. INFO SECTIONS ---
                     InfoSection(title = "Informasi Kontak") {
                         InfoRow(Icons.Default.Phone, "No. HP", p.no_hp ?: "-")
                         InfoRow(Icons.Default.LocationOn, "Alamat", p.alamat ?: "-")
@@ -187,7 +185,6 @@ fun DetailPelangganScreen(
                         InfoRow(Icons.Default.Dns, "MAC Address", p.mac_address ?: "-")
                     }
 
-                    // --- 4. AKSI NAVIGASI: TAGIHAN & EDIT ---
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -210,7 +207,6 @@ fun DetailPelangganScreen(
                         }
                     }
 
-                    // --- 5. TOMBOL KELOLA AKSI MIKROTIK ---
                     Button(
                         onClick = { showMikroTikDialog = true },
                         modifier = Modifier.fillMaxWidth(),
@@ -225,7 +221,6 @@ fun DetailPelangganScreen(
         }
     }
 
-    // --- DIALOG AKSI MIKROTIK MUNCUL DI SINI ---
     if (showMikroTikDialog && detail != null) {
         MikroTikActionDialog(
             pelangganId = detail!!.id,
@@ -235,23 +230,9 @@ fun DetailPelangganScreen(
     }
 }
 
-// =======================================================
-// HELPER FUNCTIONS (INTENT & UI COMPONENTS)
-// =======================================================
-
-private fun openWhatsApp(context: Context, phone: String, message: String) {
+private fun openWhatsApp(context: Context, url: String) {
     try {
-        var cleanNumber = phone.replace(Regex("[^0-9]"), "")
-        if (cleanNumber.startsWith("0")) {
-            cleanNumber = "62" + cleanNumber.substring(1)
-        } else if (cleanNumber.startsWith("8")) {
-            cleanNumber = "62$cleanNumber"
-        }
-
-        val url = "https://api.whatsapp.com/send?phone=$cleanNumber&text=${Uri.encode(message)}"
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(url)
-        }
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         context.startActivity(intent)
     } catch (e: Exception) {
         Toast.makeText(context, "Gagal membuka WhatsApp", Toast.LENGTH_SHORT).show()
