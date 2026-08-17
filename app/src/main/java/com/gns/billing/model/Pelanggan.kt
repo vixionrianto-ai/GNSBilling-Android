@@ -6,6 +6,7 @@ data class Pelanggan(
     val nama: String,
     val alamat: String?,
     val no_hp: String?,
+    val whatsapp_url: String? = null,
     val router_id: Int?,
     val router: Router?,
     val paket_id: Int?,
@@ -15,7 +16,6 @@ data class Pelanggan(
     val ip_address: String?,
     val mac_address: String?,
     val status: String,
-    // --- TAMBAHAN PROPERTI BAGIAN BAWAH AGAR TERBACA DARI API ---
     val tanggal_pasang: String? = null,
     val tanggal_aktif: String? = null,
     val keterangan: String? = null,
