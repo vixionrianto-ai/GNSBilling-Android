@@ -9,14 +9,6 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import org.json.JSONObject
 
-data class TagihanJatuhTempo(
-    val pelangganId: Int,
-    val namaPelanggan: String,
-    val noHp: String,
-    val listBulanTunggakan: List<String>,
-    val totalTunggakan: Double
-)
-
 class TagihanViewModel : ViewModel() {
 
     private val repository = TagihanRepository()
@@ -24,8 +16,8 @@ class TagihanViewModel : ViewModel() {
     private val _tagihanList = MutableStateFlow<List<Tagihan>>(emptyList())
     val tagihanList: StateFlow<List<Tagihan>> = _tagihanList.asStateFlow()
 
-    private val _listJatuhTempo = MutableStateFlow<List<TagihanJatuhTempo>>(emptyList())
-    val listJatuhTempo: StateFlow<List<TagihanJatuhTempo>> = _listJatuhTempo.asStateFlow()
+    private val _listJatuhTempo = MutableStateFlow<List<Tagihan>>(emptyList())
+    val listJatuhTempo: StateFlow<List<Tagihan>> = _listJatuhTempo.asStateFlow()
 
     private val _detailTagihan = MutableStateFlow<DetailTagihanResponse?>(null)
     val detailTagihan: StateFlow<DetailTagihanResponse?> = _detailTagihan.asStateFlow()
@@ -62,34 +54,10 @@ class TagihanViewModel : ViewModel() {
             _isLoading.value = true
             _error.value = null
             try {
+                // Server sudah menentukan tagihan mana yang belum lunas.
+                // Android hanya menampilkan data yang dikirim API.
                 val response = repository.getTagihanJatuhTempoList()
-                val allTagihan = response.data ?: emptyList()
-
-                val groupedByPelanggan = allTagihan.groupBy { it.pelanggan_id ?: 0 }
-                val hasilJatuhTempo = mutableListOf<TagihanJatuhTempo>()
-
-                for ((pelangganId, tagihansPelanggan) in groupedByPelanggan) {
-                    if (pelangganId == 0) continue
-
-                    val sample = tagihansPelanggan.first()
-                    val nama = sample.pelanggan_nama ?: "Pelanggan #$pelangganId"
-                    val noHp = sample.pelanggan_no_hp ?: ""
-
-                    val listPeriode = tagihansPelanggan.map { it.periode.ifEmpty { "-" } }
-                    val totalTunggakan = tagihansPelanggan.sumOf { if (it.sisa > 0.0) it.sisa else it.total }
-
-                    hasilJatuhTempo.add(
-                        TagihanJatuhTempo(
-                            pelangganId = pelangganId,
-                            namaPelanggan = nama,
-                            noHp = noHp,
-                            listBulanTunggakan = listPeriode,
-                            totalTunggakan = totalTunggakan
-                        )
-                    )
-                }
-
-                _listJatuhTempo.value = hasilJatuhTempo
+                _listJatuhTempo.value = response.data ?: emptyList()
             } catch (e: Exception) {
                 _error.value = parseError(e)
                 _listJatuhTempo.value = emptyList()
@@ -105,8 +73,7 @@ class TagihanViewModel : ViewModel() {
             _isLoading.value = true
             _error.value = null
             try {
-                val response = repository.getTagihanDetail(id)
-                _detailTagihan.value = response
+                _detailTagihan.value = repository.getTagihanDetail(id)
             } catch (e: Exception) {
                 _error.value = parseError(e)
                 _detailTagihan.value = null
