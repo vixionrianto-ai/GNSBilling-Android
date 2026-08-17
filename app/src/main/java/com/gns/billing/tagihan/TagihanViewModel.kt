@@ -25,6 +25,9 @@ class TagihanViewModel : ViewModel() {
     private val _whatsappUrl = MutableStateFlow<String?>(null)
     val whatsappUrl: StateFlow<String?> = _whatsappUrl.asStateFlow()
 
+    private val _whatsappError = MutableStateFlow<String?>(null)
+    val whatsappError: StateFlow<String?> = _whatsappError.asStateFlow()
+
     private val _whatsappLoading = MutableStateFlow(false)
     val whatsappLoading: StateFlow<Boolean> = _whatsappLoading.asStateFlow()
 
@@ -94,17 +97,17 @@ class TagihanViewModel : ViewModel() {
         viewModelScope.launch {
             _whatsappLoading.value = true
             _whatsappUrl.value = null
-            _error.value = null
+            _whatsappError.value = null
             try {
                 val response = repository.getTagihanWhatsapp(id)
                 val url = response.data?.url
                 if (response.success && !url.isNullOrBlank()) {
                     _whatsappUrl.value = url
                 } else {
-                    _error.value = response.message ?: "Nomor WhatsApp pelanggan tidak tersedia."
+                    _whatsappError.value = response.message ?: "Nomor WhatsApp pelanggan tidak tersedia."
                 }
             } catch (e: Exception) {
-                _error.value = parseError(e)
+                _whatsappError.value = parseError(e)
                 e.printStackTrace()
             } finally {
                 _whatsappLoading.value = false
@@ -114,6 +117,10 @@ class TagihanViewModel : ViewModel() {
 
     fun clearWhatsappUrl() {
         _whatsappUrl.value = null
+    }
+
+    fun clearWhatsappError() {
+        _whatsappError.value = null
     }
 
     fun clearError() {
