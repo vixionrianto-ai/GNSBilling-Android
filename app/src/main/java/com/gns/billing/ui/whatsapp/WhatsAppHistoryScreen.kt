@@ -127,7 +127,9 @@ fun WhatsAppHistoryScreen(
                 item { Text("Belum ada riwayat WhatsApp.", style = MaterialTheme.typography.bodyLarge) }
             }
 
-            items(logs, key = { it.id }) { log -> WhatsAppLogCard(log) }
+            items(logs, key = { it.id }) { log ->
+                WhatsAppLogCard(log) { navController.navigate("whatsapp_history_detail/${log.id}") }
+            }
         }
     }
 }
@@ -159,9 +161,9 @@ private fun StatCard(modifier: Modifier, label: String, value: Int) {
 }
 
 @Composable
-private fun WhatsAppLogCard(log: WhatsAppLogItem) {
+private fun WhatsAppLogCard(log: WhatsAppLogItem, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { },
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
