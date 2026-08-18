@@ -94,52 +94,22 @@ fun WhatsAppHistoryScreen(
 
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = status == null,
-                        onClick = { viewModel.setStatus(null) },
-                        label = { Text("Semua") }
-                    )
-                    FilterChip(
-                        selected = status == "success",
-                        onClick = { viewModel.setStatus("success") },
-                        label = { Text("Berhasil") }
-                    )
-                    FilterChip(
-                        selected = status == "failed",
-                        onClick = { viewModel.setStatus("failed") },
-                        label = { Text("Gagal") }
-                    )
-                    FilterChip(
-                        selected = status == "pending",
-                        onClick = { viewModel.setStatus("pending") },
-                        label = { Text("Pending") }
-                    )
+                    FilterChip(selected = status == null, onClick = { viewModel.setStatus(null) }, label = { Text("Semua") })
+                    FilterChip(selected = status == "success", onClick = { viewModel.setStatus("success") }, label = { Text("Berhasil") })
+                    FilterChip(selected = status == "failed", onClick = { viewModel.setStatus("failed") }, label = { Text("Gagal") })
+                    FilterChip(selected = status == "pending", onClick = { viewModel.setStatus("pending") }, label = { Text("Pending") })
                 }
             }
 
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = jenis == null,
-                        onClick = { viewModel.setJenis(null) },
-                        label = { Text("Semua Jenis") }
-                    )
-                    FilterChip(
-                        selected = jenis == "tagihan",
-                        onClick = { viewModel.setJenis("tagihan") },
-                        label = { Text("Tagihan") }
-                    )
-                    FilterChip(
-                        selected = jenis == "pembayaran",
-                        onClick = { viewModel.setJenis("pembayaran") },
-                        label = { Text("Pembayaran") }
-                    )
+                    FilterChip(selected = jenis == null, onClick = { viewModel.setJenis(null) }, label = { Text("Semua Jenis") })
+                    FilterChip(selected = jenis == "tagihan", onClick = { viewModel.setJenis("tagihan") }, label = { Text("Tagihan") })
+                    FilterChip(selected = jenis == "pembayaran", onClick = { viewModel.setJenis("pembayaran") }, label = { Text("Pembayaran") })
                 }
             }
 
-            if (loading) {
-                item { CircularProgressIndicator() }
-            }
+            if (loading) item { CircularProgressIndicator() }
 
             error?.let { message ->
                 item {
@@ -154,14 +124,10 @@ fun WhatsAppHistoryScreen(
             }
 
             if (!loading && logs.isEmpty() && error == null) {
-                item {
-                    Text("Belum ada riwayat WhatsApp.", style = MaterialTheme.typography.bodyLarge)
-                }
+                item { Text("Belum ada riwayat WhatsApp.", style = MaterialTheme.typography.bodyLarge) }
             }
 
-            items(logs, key = { it.id }) { log ->
-                WhatsAppLogCard(log)
-            }
+            items(logs, key = { it.id }) { log -> WhatsAppLogCard(log) }
         }
     }
 }
@@ -171,20 +137,20 @@ private fun StatisticsRow(stats: WhatsAppStatistics) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Statistik WhatsApp", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatCard("Total", stats.total)
-            StatCard("Berhasil", stats.success)
-            StatCard("Gagal", stats.failed)
+            StatCard(Modifier.weight(1f), "Total", stats.total)
+            StatCard(Modifier.weight(1f), "Berhasil", stats.success)
+            StatCard(Modifier.weight(1f), "Gagal", stats.failed)
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatCard("Pending", stats.pending)
-            StatCard("Hari ini", stats.today)
+            StatCard(Modifier.weight(1f), "Pending", stats.pending)
+            StatCard(Modifier.weight(1f), "Hari ini", stats.today)
         }
     }
 }
 
 @Composable
-private fun StatCard(label: String, value: Int) {
-    Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
+private fun StatCard(modifier: Modifier, label: String, value: Int) {
+    Card(modifier = modifier, shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium)
             Text(value.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -195,9 +161,7 @@ private fun StatCard(label: String, value: Int) {
 @Composable
 private fun WhatsAppLogCard(log: WhatsAppLogItem) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { },
+        modifier = Modifier.fillMaxWidth().clickable { },
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
