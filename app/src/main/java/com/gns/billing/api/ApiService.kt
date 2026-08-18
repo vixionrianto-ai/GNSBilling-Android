@@ -160,7 +160,7 @@ interface ApiService {
     ): Unit
 
     // ==========================================
-    // MIKROTIK & PROFILES
+    // ROUTER & MIKROTIK
     // ==========================================
     @GET("router")
     suspend fun getRouter(): RouterResponse
@@ -170,17 +170,73 @@ interface ApiService {
         @Path("id") id: Int
     ): ProfileResponse
 
+    @GET("router/{id}/secrets")
+    suspend fun getSecrets(
+        @Path("id") id: Int
+    ): MessageResponse
+
+    @GET("router/{id}/active")
+    suspend fun getActiveSessions(
+        @Path("id") id: Int
+    ): MessageResponse
+
+    @POST("router/{id}/test")
+    suspend fun testRouter(
+        @Path("id") id: Int
+    ): MessageResponse
+
+    @GET("router/{id}/info")
+    suspend fun getRouterInfo(
+        @Path("id") id: Int
+    ): MessageResponse
+
     @FormUrlEncoded
-    @POST("router/{id}/create-secret")
+    @POST("router/{id}/secret")
     suspend fun createSecret(
         @Path("id") routerId: Int,
         @Field("username") username: String,
         @Field("password") password: String,
-        @Field("profile") profile: String
+        @Field("profile") profile: String,
+        @Field("service") service: String = "pppoe"
+    ): MessageResponse
+
+    @FormUrlEncoded
+    @PUT("router/{id}/secret/{secret}")
+    suspend fun updateSecret(
+        @Path("id") routerId: Int,
+        @Path("secret") secretId: String,
+        @Field("username") username: String,
+        @Field("password") password: String,
+        @Field("profile") profile: String,
+        @Field("service") service: String = "pppoe"
+    ): MessageResponse
+
+    @DELETE("router/{id}/secret/{secret}")
+    suspend fun deleteSecret(
+        @Path("id") routerId: Int,
+        @Path("secret") secretId: String
+    ): MessageResponse
+
+    @PUT("router/{id}/secret/{secret}/enable")
+    suspend fun enableSecret(
+        @Path("id") routerId: Int,
+        @Path("secret") secretId: String
+    ): MessageResponse
+
+    @PUT("router/{id}/secret/{secret}/disable")
+    suspend fun disableSecret(
+        @Path("id") routerId: Int,
+        @Path("secret") secretId: String
+    ): MessageResponse
+
+    @POST("router/{id}/secret/{secret}/disconnect")
+    suspend fun disconnectSecret(
+        @Path("id") routerId: Int,
+        @Path("secret") secretId: String
     ): MessageResponse
 
     // ==========================================
-    // MIKROTIK ACTION (ISOLIR & DISCONNECT)
+    // CUSTOMER SERVICE ACTIONS
     // ==========================================
     @POST("pelanggan/{id}/buka-isolir")
     suspend fun bukaIsolir(
