@@ -29,6 +29,7 @@ import com.gns.billing.ui.pelanggan.TambahPelangganScreen
 import com.gns.billing.ui.pembayaran.PembayaranScreen
 import com.gns.billing.ui.pembayaran.PaymentDetailScreen
 import com.gns.billing.ui.pembayaran.RiwayatPembayaranScreen
+import com.gns.billing.ui.whatsapp.WhatsAppHistoryDetailScreen
 import com.gns.billing.ui.whatsapp.WhatsAppHistoryScreen
 
 @OptIn(markerClass = [ExperimentalMaterial3Api::class])
@@ -118,5 +119,11 @@ fun AppNavigation() {
 
         composable("laporan") { LaporanScreen(navController = navController) }
         composable("whatsapp_history") { WhatsAppHistoryScreen(navController = navController) }
+        composable("whatsapp_history_detail/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
+            WhatsAppHistoryDetailScreen(
+                navController = navController,
+                logId = entry.arguments?.getInt("id") ?: 0
+            )
+        }
     }
 }
