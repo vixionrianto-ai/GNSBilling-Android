@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +42,7 @@ import com.gns.billing.model.WhatsAppLogItem
 import com.gns.billing.model.WhatsAppStatistics
 import com.gns.billing.viewmodel.WhatsAppHistoryViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WhatsAppHistoryScreen(
     navController: NavHostController,
@@ -81,7 +83,6 @@ fun WhatsAppHistoryScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item { StatisticsRow(stats) }
-
             item {
                 OutlinedTextField(
                     value = search,
@@ -91,7 +92,6 @@ fun WhatsAppHistoryScreen(
                     label = { Text("Cari nama, nomor, atau invoice") }
                 )
             }
-
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = status == null, onClick = { viewModel.setStatus(null) }, label = { Text("Semua") })
@@ -100,7 +100,6 @@ fun WhatsAppHistoryScreen(
                     FilterChip(selected = status == "pending", onClick = { viewModel.setStatus("pending") }, label = { Text("Pending") })
                 }
             }
-
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = jenis == null, onClick = { viewModel.setJenis(null) }, label = { Text("Semua Jenis") })
@@ -108,9 +107,7 @@ fun WhatsAppHistoryScreen(
                     FilterChip(selected = jenis == "pembayaran", onClick = { viewModel.setJenis("pembayaran") }, label = { Text("Pembayaran") })
                 }
             }
-
             if (loading) item { CircularProgressIndicator() }
-
             error?.let { message ->
                 item {
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
@@ -122,11 +119,7 @@ fun WhatsAppHistoryScreen(
                     }
                 }
             }
-
-            if (!loading && logs.isEmpty() && error == null) {
-                item { Text("Belum ada riwayat WhatsApp.", style = MaterialTheme.typography.bodyLarge) }
-            }
-
+            if (!loading && logs.isEmpty() && error == null) item { Text("Belum ada riwayat WhatsApp.") }
             items(logs, key = { it.id }) { log ->
                 WhatsAppLogCard(log) { navController.navigate("whatsapp_history_detail/${log.id}") }
             }
@@ -162,10 +155,7 @@ private fun StatCard(modifier: Modifier, label: String, value: Int) {
 
 @Composable
 private fun WhatsAppLogCard(log: WhatsAppLogItem, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp)
-    ) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(log.pelanggan?.nama ?: log.nomor ?: "-", fontWeight = FontWeight.Bold)
