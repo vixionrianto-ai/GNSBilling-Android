@@ -19,6 +19,8 @@ import com.gns.billing.model.PembayaranResponse
 import com.gns.billing.model.PembayaranSummaryResponse
 import com.gns.billing.model.ProfileResponse
 import com.gns.billing.model.RouterResponse
+import com.gns.billing.model.WhatsAppHistoryDetailResponse
+import com.gns.billing.model.WhatsAppHistoryResponse
 import com.gns.billing.tagihan.DetailTagihanResponse
 import com.gns.billing.tagihan.TagihanResponse
 import com.gns.billing.tagihan.TagihanWhatsappResponse
@@ -35,13 +37,8 @@ import retrofit2.http.Query
 
 interface ApiService {
 
-    // ==========================================
-    // AUTH & DASHBOARD
-    // ==========================================
     @POST("login")
-    suspend fun login(
-        @Body request: LoginRequest
-    ): Response<LoginResponse>
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     @GET("me")
     suspend fun me(): MeResponse
@@ -49,9 +46,6 @@ interface ApiService {
     @GET("dashboard")
     suspend fun getDashboard(): DashboardResponse
 
-    // ==========================================
-    // MANAJEMEN PELANGGAN
-    // ==========================================
     @GET("pelanggan")
     suspend fun getPelanggan(
         @Query("page") page: Int = 1,
@@ -60,19 +54,13 @@ interface ApiService {
     ): PelangganResponse
 
     @GET("pelanggan")
-    suspend fun searchPelanggan(
-        @Query("search") query: String
-    ): PelangganResponse
+    suspend fun searchPelanggan(@Query("search") query: String): PelangganResponse
 
     @GET("pelanggan/{id}")
-    suspend fun getDetailPelanggan(
-        @Path("id") id: Int
-    ): PelangganDetailResponse
+    suspend fun getDetailPelanggan(@Path("id") id: Int): PelangganDetailResponse
 
     @POST("pelanggan")
-    suspend fun tambahPelanggan(
-        @Body request: PelangganRequest
-    ): PelangganDetailResponse
+    suspend fun tambahPelanggan(@Body request: PelangganRequest): PelangganDetailResponse
 
     @PUT("pelanggan/{id}")
     suspend fun updatePelanggan(
@@ -81,48 +69,31 @@ interface ApiService {
     ): PelangganDetailResponse
 
     @DELETE("pelanggan/{id}")
-    suspend fun hapusPelanggan(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun hapusPelanggan(@Path("id") id: Int): MessageResponse
 
-    // ==========================================
-    // TAGIHAN & PEMBAYARAN
-    // ==========================================
     @GET("pelanggan/{id}/tagihan")
-    suspend fun getTagihanPelanggan(
-        @Path("id") id: Int
-    ): TagihanResponse
+    suspend fun getTagihanPelanggan(@Path("id") id: Int): TagihanResponse
 
     @GET("tagihan/{id}")
-    suspend fun getTagihanDetail(
-        @Path("id") id: Int
-    ): DetailTagihanResponse
+    suspend fun getTagihanDetail(@Path("id") id: Int): DetailTagihanResponse
 
     @GET("tagihan")
-    suspend fun getSemuaTagihan(
-        @Query("status") status: String? = null
-    ): TagihanResponse
+    suspend fun getSemuaTagihan(@Query("status") status: String? = null): TagihanResponse
 
     @GET("tagihan/jatuh-tempo-all")
     suspend fun getTagihanJatuhTempoList(): TagihanResponse
 
     @GET("tagihan/{id}/whatsapp")
-    suspend fun getTagihanWhatsapp(
-        @Path("id") id: Int
-    ): TagihanWhatsappResponse
+    suspend fun getTagihanWhatsapp(@Path("id") id: Int): TagihanWhatsappResponse
 
     @GET("pembayaran/{id}")
-    suspend fun getDetailPembayaran(
-        @Path("id") id: Int
-    ): PembayaranDetailResponse
+    suspend fun getDetailPembayaran(@Path("id") id: Int): PembayaranDetailResponse
 
     @GET("pembayaran/summary")
     suspend fun getPembayaranSummary(): PembayaranSummaryResponse
 
     @POST("pembayaran")
-    suspend fun simpanPembayaran(
-        @Body request: PembayaranRequest
-    ): PembayaranResponse
+    suspend fun simpanPembayaran(@Body request: PembayaranRequest): PembayaranResponse
 
     @GET("pembayaran/history")
     suspend fun getPembayaranHistory(
@@ -132,21 +103,14 @@ interface ApiService {
         @Query("metode") metode: String? = null
     ): PembayaranHistoryResponse
 
-    // ==========================================
-    // MANAJEMEN PAKET
-    // ==========================================
     @GET("paket")
     suspend fun getPaket(): PaketResponse
 
     @GET("paket/{id}")
-    suspend fun getDetailPaket(
-        @Path("id") id: Int
-    ): PaketDetailResponse
+    suspend fun getDetailPaket(@Path("id") id: Int): PaketDetailResponse
 
     @POST("paket")
-    suspend fun tambahPaket(
-        @Body request: PaketRequest
-    ): Paket
+    suspend fun tambahPaket(@Body request: PaketRequest): Paket
 
     @PUT("paket/{id}")
     suspend fun updatePaket(
@@ -155,40 +119,25 @@ interface ApiService {
     ): Paket
 
     @DELETE("paket/{id}")
-    suspend fun hapusPaket(
-        @Path("id") id: Int
-    ): Unit
+    suspend fun hapusPaket(@Path("id") id: Int): Unit
 
-    // ==========================================
-    // ROUTER & MIKROTIK
-    // ==========================================
     @GET("router")
     suspend fun getRouter(): RouterResponse
 
     @GET("router/{id}/profiles")
-    suspend fun getProfiles(
-        @Path("id") id: Int
-    ): ProfileResponse
+    suspend fun getProfiles(@Path("id") id: Int): ProfileResponse
 
     @GET("router/{id}/secrets")
-    suspend fun getSecrets(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun getSecrets(@Path("id") id: Int): MessageResponse
 
     @GET("router/{id}/active")
-    suspend fun getActiveSessions(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun getActiveSessions(@Path("id") id: Int): MessageResponse
 
     @POST("router/{id}/test")
-    suspend fun testRouter(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun testRouter(@Path("id") id: Int): MessageResponse
 
     @GET("router/{id}/info")
-    suspend fun getRouterInfo(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun getRouterInfo(@Path("id") id: Int): MessageResponse
 
     @FormUrlEncoded
     @POST("router/{id}/secret")
@@ -235,21 +184,25 @@ interface ApiService {
         @Path("secret") secretId: String
     ): MessageResponse
 
-    // ==========================================
-    // CUSTOMER SERVICE ACTIONS
-    // ==========================================
     @POST("pelanggan/{id}/buka-isolir")
-    suspend fun bukaIsolir(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun bukaIsolir(@Path("id") id: Int): MessageResponse
 
     @POST("pelanggan/{id}/isolir")
-    suspend fun isolirPelanggan(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun isolirPelanggan(@Path("id") id: Int): MessageResponse
 
     @POST("pelanggan/{id}/disconnect")
-    suspend fun disconnectSession(
-        @Path("id") id: Int
-    ): MessageResponse
+    suspend fun disconnectSession(@Path("id") id: Int): MessageResponse
+
+    @GET("whatsapp")
+    suspend fun getWhatsAppHistory(
+        @Query("page") page: Int = 1,
+        @Query("search") search: String? = null,
+        @Query("status") status: String? = null,
+        @Query("jenis") jenis: String? = null,
+        @Query("provider") provider: String? = null,
+        @Query("tanggal") tanggal: String? = null
+    ): WhatsAppHistoryResponse
+
+    @GET("whatsapp/{id}")
+    suspend fun getWhatsAppHistoryDetail(@Path("id") id: Int): WhatsAppHistoryDetailResponse
 }
