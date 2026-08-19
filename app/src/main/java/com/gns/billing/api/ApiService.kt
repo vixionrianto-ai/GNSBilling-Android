@@ -43,6 +43,6 @@ interface ApiService {
     @PUT("router/{id}/ppp-secret/{secret}/disable") suspend fun disableSecret(@Path("id") id: Int, @Path("secret") secret: String): MessageResponse
     @GET("router/{id}/ppp-profile") suspend fun getPppProfile(@Path("id") id: Int): PppProfileResponse
     @FormUrlEncoded @POST("router/{id}/ppp-profile") suspend fun createProfile(@Path("id") id: Int, @Field("name") name: String, @Field("local_address") localAddress: String, @Field("remote_address") remoteAddress: String, @Field("rate_limit") rateLimit: String, @Field("only_one") onlyOne: String): MessageResponse
-    @FormUrlEncoded @PUT("router/{id}/ppp-profile/{profile}") suspend fun updateProfile(@Path("id") id: Int, @Path("profile") profile: String, @Field("name") name: String, @Field("password") password: String, @Field("service") service: String, @Field("profile") profile: String, @Field("disabled") disabled: String): MessageResponse
-    @DELETE("router/{id}/ppp-profile/{profile}") suspend fun deleteProfile(@Path("id") profile: Int, @Path("profile") profile: String): MessageResponse
+    @FormUrlEncoded @PUT("router/{id}/ppp-profile/{profile}") suspend fun updateProfile(@Path("id") id: Int, @Path("profile") profile: String, @Field("name") name: String, @Field("local_address") localAddress: String, @Field("remote_address") remoteAddress: String, @Field("rate_limit") rateLimit: String, @Field("only_one") onlyOne: String): MessageResponse
+    @DELETE("router/{id}/ppp-profile/{profile}") suspend fun deleteProfile(@Path("id") id: Int, @Path("profile") profile: String): MessageResponse
 }
