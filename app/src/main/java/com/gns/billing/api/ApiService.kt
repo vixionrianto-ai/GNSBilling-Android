@@ -20,9 +20,12 @@ import com.gns.billing.model.ProfileResponse
 import com.gns.billing.model.RouterResponse
 import com.gns.billing.tagihan.DetailTagihanResponse
 import com.gns.billing.tagihan.TagihanResponse
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -49,7 +52,7 @@ interface ApiService {
     @GET("pembayaran/{id}") suspend fun getDetailPembayaran(@Path("id") id: Int): PembayaranDetailResponse
     @POST("pembayaran") suspend fun simpanPembayaran(@Body request: PembayaranRequest): PembayaranResponse
     @GET("pembayaran/{id}/invoice") suspend fun getInvoice(@Path("id") id: Int): PembayaranDetailResponse
-    @GET("pembayaran/{id}/pdf") suspend fun getInvoicePdf(@Path("id") id: Int): Response<okhttp3.ResponseBody>
+    @GET("pembayaran/{id}/pdf") suspend fun getInvoicePdf(@Path("id") id: Int): Response<ResponseBody>
 
     @GET("paket") suspend fun getPaket(): PaketResponse
     @GET("paket/{id}") suspend fun getDetailPaket(@Path("id") id: Int): PaketDetailResponse
@@ -61,5 +64,13 @@ interface ApiService {
     @GET("router/{id}/profiles") suspend fun getProfiles(@Path("id") id: Int): ProfileResponse
     @GET("router/{id}/test") suspend fun testRouter(@Path("id") id: Int): MessageResponse
     @GET("router/{id}/ppp-secret") suspend fun getPppSecret(@Path("id") id: Int): MessageResponse
+    @FormUrlEncoded
+    @POST("router/{id}/ppp-secret")
+    suspend fun createSecret(
+        @Path("id") id: Int,
+        @Field("username") username: String,
+        @Field("password") password: String,
+        @Field("profile") profile: String
+    ): MessageResponse
     @GET("router/{id}/ppp-profile") suspend fun getPppProfile(@Path("id") id: Int): MessageResponse
 }
