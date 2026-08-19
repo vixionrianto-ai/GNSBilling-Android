@@ -1,8 +1,5 @@
 package com.gns.billing.tagihan
 
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,13 +7,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -32,32 +27,9 @@ fun DetailTagihanScreen(
 ) {
     val detailResponse by viewModel.detailTagihan.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val whatsappUrl by viewModel.whatsappUrl.collectAsState()
-    val whatsappError by viewModel.whatsappError.collectAsState()
-    val whatsappLoading by viewModel.whatsappLoading.collectAsState()
-    val context = LocalContext.current
 
-    LaunchedEffect(tagihanId) { viewModel.loadDetailTagihan(tagihanId) }
-
-    LaunchedEffect(whatsappUrl) {
-        val url = whatsappUrl
-        if (!url.isNullOrBlank()) {
-            try {
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            } catch (_: Exception) {
-                Toast.makeText(context, "Gagal membuka WhatsApp", Toast.LENGTH_SHORT).show()
-            } finally {
-                viewModel.clearWhatsappUrl()
-            }
-        }
-    }
-
-    LaunchedEffect(whatsappError) {
-        val error = whatsappError
-        if (!error.isNullOrBlank()) {
-            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-            viewModel.clearWhatsappError()
-        }
+    LaunchedEffect(tagihanId) {
+        viewModel.loadDetailTagihan(tagihanId)
     }
 
     Scaffold(
@@ -76,16 +48,25 @@ fun DetailTagihanScreen(
             Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
+            ) {
+                CircularProgressIndicator()
+            }
         } else {
             val tagihan = detailResponse?.data
             if (tagihan != null) {
                 Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                     Column(
-                        modifier = Modifier.fillMaxSize().padding(bottom = 90.dp).padding(16.dp).verticalScroll(rememberScrollState()),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 90.dp)
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,14 +80,22 @@ fun DetailTagihanScreen(
                                 Text(
                                     tagihan.status,
                                     color = Color.White,
-                                    modifier = Modifier.background(statusColor, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 6.dp),
+                                    modifier = Modifier
+                                        .background(statusColor, RoundedCornerShape(16.dp))
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
                                     style = MaterialTheme.typography.labelMedium
                                 )
                             }
                         }
 
-                        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Text("Informasi Pelanggan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
                                 DetailInfoRow("Nama Pelanggan", tagihan.pelanggan_nama ?: "-")
@@ -115,8 +104,14 @@ fun DetailTagihanScreen(
                             }
                         }
 
-                        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Text("Rincian Biaya", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
                                 DetailInfoRow("Total Tagihan", formatRupiah(tagihan.total))
@@ -124,36 +119,31 @@ fun DetailTagihanScreen(
                                 DetailInfoRow("Sisa Tagihan", formatRupiah(tagihan.sisa))
                             }
                         }
-
-                        Button(
-                            onClick = { viewModel.loadTagihanWhatsapp(tagihan.id) },
-                            enabled = !whatsappLoading,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Send, contentDescription = "WhatsApp")
-                            Spacer(Modifier.width(8.dp))
-                            Text("WhatsApp")
-                        }
                     }
 
-                    val status = tagihan.status
-                    if (!status.equals("Lunas", ignoreCase = true)) {
+                    if (!tagihan.status.equals("Lunas", ignoreCase = true)) {
                         Surface(
-                            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             color = Color.Transparent
                         ) {
                             Button(
                                 onClick = { navController.navigate("pembayaran_form/$tagihanId") },
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
                                 shape = RoundedCornerShape(12.dp)
-                            ) { Text("Proses Pembayaran", style = MaterialTheme.typography.titleMedium) }
+                            ) {
+                                Text("Proses Pembayaran", style = MaterialTheme.typography.titleMedium)
+                            }
                         }
                     }
                 }
             } else {
-                Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text("Data detail tagihan tidak ditemukan", color = Color.Gray)
                 }
             }
@@ -163,7 +153,10 @@ fun DetailTagihanScreen(
 
 @Composable
 fun DetailInfoRow(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
