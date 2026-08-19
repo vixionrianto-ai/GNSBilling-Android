@@ -20,205 +20,79 @@ import com.gns.billing.viewmodel.RouterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RouterDetailScreen(
-    routerId: Int,
-    navController: NavController,
-    viewModel: RouterViewModel = viewModel()
-) {
+fun RouterDetailScreen(routerId: Int, navController: NavController, viewModel: RouterViewModel = viewModel()) {
     val profiles by viewModel.profiles.collectAsState()
     val isLoading by viewModel.loading.collectAsState()
+    val connectionMessage by viewModel.connectionMessage.collectAsState()
     val context = LocalContext.current
-
     var showAddSecretDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(routerId) {
-        viewModel.loadProfiles(routerId)
-    }
+    LaunchedEffect(routerId) { viewModel.loadProfiles(routerId) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Kelola Router (ID: $routerId)") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text("Kelola Router #$routerId") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Kembali") } }
+        )
+    }, floatingActionButton = {
+        FloatingActionButton(onClick = { showAddSecretDialog = true }) { Icon(Icons.Default.Add, "Tambah Secret") }
+    }) { paddingValues ->
+        Column(Modifier.fillMaxSize().padding(paddingValues).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Card(Modifier.fillMaxWidth()) {
+                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Router, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Router MikroTik #$routerId", fontWeight = FontWeight.Bold)
+                        Text("Status ditentukan oleh server GNS", style = MaterialTheme.typography.bodySmall)
                     }
                 }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddSecretDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Secret", tint = MaterialTheme.colorScheme.onPrimary)
             }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Router,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                Text(
-                                    text = "Router MikroTik #$routerId",
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Text(
-                                    text = "Status: Terhubung & Aktif",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = { showAddSecretDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Buat Secret PPPoE Baru")
-                    }
-                }
+            Button(onClick = { viewModel.testRouter(routerId) }, enabled = !isLoading, modifier = Modifier.fillMaxWidth()) {
+                Text(if (isLoading) "Menguji..." else "Tes Koneksi MikroTik")
+            }
+            connectionMessage?.let {
+                Text(it, color = MaterialTheme.colorScheme.primary)
+            }
+            Text("PPP Profile dari MikroTik", fontWeight = FontWeight.Bold)
+            if (profiles.isEmpty()) Text("Tidak ada profile yang dikembalikan server.")
+            else profiles.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
+            Button(onClick = { showAddSecretDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Add, null); Spacer(Modifier.width(8.dp)); Text("Buat Secret PPPoE Baru")
             }
         }
     }
 
     if (showAddSecretDialog) {
-        AddSecretDialog(
-            profiles = profiles,
-            onDismiss = { showAddSecretDialog = false },
-            onSubmit = { username: String, password: String, profile: String ->
-                viewModel.createSecret(routerId, username, password, profile) { success, message ->
-                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                    if (success) {
-                        showAddSecretDialog = false
-                    }
-                }
+        AddSecretDialog(profiles, { showAddSecretDialog = false }) { username, password, profile ->
+            viewModel.createSecret(routerId, username, password, profile) { success, message ->
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                if (success) showAddSecretDialog = false
             }
-        )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSecretDialog(
-    profiles: List<String>,
-    onDismiss: () -> Unit,
-    onSubmit: (String, String, String) -> Unit
-) {
+fun AddSecretDialog(profiles: List<String>, onDismiss: () -> Unit, onSubmit: (String, String, String) -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var selectedProfile by remember { mutableStateOf(profiles.firstOrNull() ?: "default") }
+    var selectedProfile by remember { mutableStateOf(profiles.firstOrNull() ?: "") }
     var expanded by remember { mutableStateOf(false) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Tambah Secret PPPoE") },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Username PPPoE") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = selectedProfile,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Pilih Profil Paket") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        val listProfil = if (profiles.isEmpty()) listOf("default") else profiles
-                        listProfil.forEach { profile ->
-                            DropdownMenuItem(
-                                text = { Text(profile) },
-                                onClick = {
-                                    selectedProfile = profile
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
+    AlertDialog(onDismissRequest = onDismiss, title = { Text("Tambah Secret PPPoE") }, text = {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedTextField(username, { username = it }, label = { Text("Username PPPoE") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(password, { password = it }, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), singleLine = true)
+            ExposedDropdownMenuBox(expanded, { expanded = !expanded }) {
+                OutlinedTextField(selectedProfile, {}, readOnly = true, label = { Text("Pilih Profil Paket") }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }, modifier = Modifier.fillMaxWidth().menuAnchor())
+                ExposedDropdownMenu(expanded, { expanded = false }) {
+                    profiles.forEach { profile -> DropdownMenuItem(text = { Text(profile) }, onClick = { selectedProfile = profile; expanded = false }) }
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (username.isNotBlank() && password.isNotBlank()) {
-                        onSubmit(username, password, selectedProfile)
-                    }
-                }
-            ) {
-                Text("Simpan Secret")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
             }
         }
-    )
+    }, confirmButton = {
+        Button(onClick = { if (username.isNotBlank() && password.isNotBlank() && selectedProfile.isNotBlank()) onSubmit(username, password, selectedProfile) }) { Text("Simpan Secret") }
+    }, dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } })
 }
