@@ -48,6 +48,8 @@ interface ApiService {
     @GET("pembayaran") suspend fun getPembayaranHistory(@Query("page") page: Int = 1, @Query("search") search: String? = null): PembayaranHistoryResponse
     @GET("pembayaran/{id}") suspend fun getDetailPembayaran(@Path("id") id: Int): PembayaranDetailResponse
     @POST("pembayaran") suspend fun simpanPembayaran(@Body request: PembayaranRequest): PembayaranResponse
+    @GET("pembayaran/{id}/invoice") suspend fun getInvoice(@Path("id") id: Int): PembayaranDetailResponse
+    @GET("pembayaran/{id}/pdf") suspend fun getInvoicePdf(@Path("id") id: Int): Response<okhttp3.ResponseBody>
 
     @GET("paket") suspend fun getPaket(): PaketResponse
     @GET("paket/{id}") suspend fun getDetailPaket(@Path("id") id: Int): PaketDetailResponse
