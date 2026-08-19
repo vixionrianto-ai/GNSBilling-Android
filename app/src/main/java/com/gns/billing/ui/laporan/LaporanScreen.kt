@@ -27,17 +27,13 @@ fun LaporanScreen(
     viewModel: PembayaranViewModel = viewModel()
 ) {
     val historyList by viewModel.historyList.collectAsState()
-    val summary by viewModel.summary.collectAsState()
-    val isLoading by viewModel.loading.collectAsState()
+    val isLoading by viewModel.loadingHistory.collectAsState()
     val context = LocalContext.current
     var showFilterDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadHistory()
-        viewModel.loadSummary()
     }
-
-    val data = summary?.data
 
     Scaffold(
         topBar = {
@@ -62,52 +58,42 @@ fun LaporanScreen(
         }
     ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            if (isLoading && summary == null) {
+            if (isLoading && historyList.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            SummaryCard("Pendapatan Hari Ini", formatRupiah(summary?.getPendapatanHariIniDouble() ?: 0.0))
-                            SummaryCard("Pendapatan Bulan Ini", formatRupiah(summary?.getPendapatanBulanDouble() ?: 0.0))
-                            SummaryCard("Total Tagihan", formatRupiah(summary?.getTotalTagihanDouble() ?: 0.0))
-                            SummaryCard("Piutang", formatRupiah(summary?.getPiutangDouble() ?: 0.0))
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Text("Statistik Sistem", fontWeight = FontWeight.Bold)
-                                    HorizontalDivider()
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        StatValue("Pelanggan Aktif", data?.pelanggan_aktif ?: 0)
-                                        StatValue("Lunas", data?.lunas ?: 0)
-                                        StatValue("Jatuh Tempo", data?.jatuh_tempo ?: 0)
-                                    }
-                                }
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    "Riwayat Transaksi Masuk",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    "Data transaksi diambil langsung dari server Laravel.",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
                         }
-                    }
-
-                    item {
-                        Text(
-                            text = "Riwayat Transaksi Masuk",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
                     }
 
                     if (historyList.isEmpty()) {
                         item {
                             Box(
-                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text("Belum ada data laporan transaksi.")
@@ -117,15 +103,23 @@ fun LaporanScreen(
                         items(historyList) { item ->
                             Card(modifier = Modifier.fillMaxWidth()) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(item.getNamaPelanggan(), fontWeight = FontWeight.Bold)
-                                        Text("INV: ${item.invoice_no ?: "-"}", style = MaterialTheme.typography.bodySmall)
+                                        Text(
+                                            "INV: ${item.invoice_no ?: "-"}",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
                                     }
-                                    Text(formatRupiah(item.getNominalDouble()), fontWeight = FontWeight.Bold)
+                                    Text(
+                                        formatRupiah(item.getNominalDouble()),
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
@@ -139,29 +133,14 @@ fun LaporanScreen(
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
             title = { Text("Filter Laporan") },
-            text = { Text("Filter laporan tetap mengikuti parameter dan data yang disediakan API server.") },
+            text = {
+                Text("Filter laporan akan mengikuti parameter dan data yang disediakan API server.")
+            },
             confirmButton = {
-                TextButton(onClick = { showFilterDialog = false }) { Text("Tutup") }
+                TextButton(onClick = { showFilterDialog = false }) {
+                    Text("Tutup")
+                }
             }
         )
-    }
-}
-
-@Composable
-private fun SummaryCard(label: String, value: String) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun StatValue(label: String, value: Int) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = MaterialTheme.typography.bodySmall)
-        Text(value.toString(), fontWeight = FontWeight.Bold)
     }
 }
