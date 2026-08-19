@@ -1,18 +1,24 @@
 package com.gns.billing.ui.login
 
-import android.util.Log
-import androidx.navigation.NavHostController
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,155 +31,130 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.gns.billing.model.LoginState
 import com.gns.billing.session.SessionManager
-import com.gns.billing.viewmodel.LoginViewModel
 import com.gns.billing.session.SessionProvider
+import com.gns.billing.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     navController: NavHostController,
     loginViewModel: LoginViewModel = viewModel()
 ) {
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    val sessionManager = SessionManager(context)
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
     val loginState by loginViewModel.loginState.collectAsState()
 
     LaunchedEffect(loginState) {
+        if (loginState is LoginState.Success) {
+            val response = (loginState as LoginState.Success).response
+            response.data?.let { data ->
+                sessionManager.saveSession(
+                    token = data.token,
+                    name = data.user.name,
+                    email = data.user.email
+                )
+                SessionProvider.token = data.token
 
-        when (val state = loginState) {
-
-            is LoginState.Success -> {
-
-                val loginResponse = state.response
-
-                val loginData = loginResponse.data
-
-                if (loginData != null) {
-
-                    sessionManager.saveSession(
-                        token = loginData.token,
-                        name = loginData.user.name,
-                        email = loginData.user.email
-                    )
-                    SessionProvider.token = loginData.token
-                    android.widget.Toast.makeText(
-                        context,
-                        "Token: ${sessionManager.getToken()}",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show()
-
-                    Log.d("SESSION", "===================================")
-                    Log.d("SESSION", "TOKEN : ${sessionManager.getToken()}")
-                    Log.d("SESSION", "NAMA  : ${sessionManager.getName()}")
-                    Log.d("SESSION", "EMAIL : ${sessionManager.getEmail()}")
-                    Log.d("SESSION", "===================================")
-
-                    navController.navigate("dashboard") {
-                        popUpTo("login") {
-                            inclusive = true
-                        }
-                    }
-
+                navController.navigate("dashboard") {
+                    popUpTo("login") { inclusive = true }
                 }
-
             }
-
-            else -> {}
-
         }
-
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-
-        Text(
-            text = "GNS Billing",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Silakan login",
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Card {
-
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            shape = RoundedCornerShape(28.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        ) {
             Column(
-                modifier = Modifier.padding(20.dp)
+                modifier = Modifier.padding(28.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "GNS Billing",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Panel operasional admin & operator",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
                     label = { Text("Email") },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email
-                    )
+                    leadingIcon = {
+                        Icon(Icons.Default.Mail, contentDescription = null)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
                     label = { Text("Password") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = null)
+                    },
                     visualTransformation = PasswordVisualTransformation()
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
-
                 Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        loginViewModel.login(email, password)
-                    }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    enabled = loginState !is LoginState.Loading && email.isNotBlank() && password.isNotBlank(),
+                    onClick = { loginViewModel.login(email.trim(), password) }
                 ) {
-                    Text("LOGIN")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                when (loginState) {
-
-                    LoginState.Loading -> {
-                        CircularProgressIndicator()
-                    }
-
-                    is LoginState.Error -> {
-                        Text(
-                            text = (loginState as LoginState.Error).message,
-                            color = MaterialTheme.colorScheme.error
+                    if (loginState is LoginState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.height(22.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
+                    } else {
+                        Icon(Icons.Default.Login, contentDescription = null)
+                        Spacer(modifier = Modifier.height(0.dp))
+                        Text("Masuk")
                     }
-
-                    else -> {}
                 }
 
+                if (loginState is LoginState.Error) {
+                    Text(
+                        text = (loginState as LoginState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
-
         }
-
     }
-
 }
