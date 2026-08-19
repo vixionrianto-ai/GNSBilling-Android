@@ -58,23 +58,31 @@ fun AppNavigation() {
         composable("tagihan_semua") { TagihanScreen(navController, 0) }
         composable("tagihan_jatuh_tempo") { TagihanJatuhTempoScreen(navController) }
         composable("tagihan/{id}") { e ->
-            e.arguments?.getString("id")?.toIntOrNull()?.let { TagihanScreen(it, navController) }
+            e.arguments?.getString("id")?.toIntOrNull()?.let { TagihanScreen(navController, it) }
         }
         composable("detail_tagihan/{id}") { e ->
-            e.arguments?.getString("id")?.toIntOrNull()?.let { DetailTagihanScreen(it, navController) }
+            e.arguments?.getString("id")?.toIntOrNull()?.let { DetailTagihanScreen(navController, it) }
         }
 
-        // Single native payment module. No legacy duplicate screens.
         composable("menu_pembayaran") { PembayaranHistoryScreen(navController) }
-        composable("detail_pembayaran/{paymentId}", arguments = listOf(navArgument("paymentId") { type = NavType.IntType })) { e ->
+        composable(
+            "detail_pembayaran/{paymentId}",
+            arguments = listOf(navArgument("paymentId") { type = NavType.IntType })
+        ) { e ->
             PembayaranDetailScreen(navController, e.arguments?.getInt("paymentId") ?: 0)
         }
-        composable("pembayaran_form/{tagihanId}", arguments = listOf(navArgument("tagihanId") { type = NavType.IntType })) { e ->
+        composable(
+            "pembayaran_form/{tagihanId}",
+            arguments = listOf(navArgument("tagihanId") { type = NavType.IntType })
+        ) { e ->
             PembayaranScreen(navController, e.arguments?.getInt("tagihanId") ?: 0)
         }
 
         composable("mikrotik") { MikroTikScreen(navController) }
-        composable("router_detail/{routerId}", arguments = listOf(navArgument("routerId") { type = NavType.IntType })) { e ->
+        composable(
+            "router_detail/{routerId}",
+            arguments = listOf(navArgument("routerId") { type = NavType.IntType })
+        ) { e ->
             RouterDetailScreen(e.arguments?.getInt("routerId") ?: 0, navController)
         }
         composable("laporan") { LaporanScreen(navController) }
