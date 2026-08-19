@@ -18,19 +18,27 @@ interface ApiService {
     @PUT("pelanggan/{id}") suspend fun updatePelanggan(@Path("id") id: Int, @Body request: PelangganRequest): MessageResponse
     @DELETE("pelanggan/{id}") suspend fun hapusPelanggan(@Path("id") id: Int): MessageResponse
     @POST("pelanggan/sync") suspend fun syncPelanggan(): MessageResponse
+
+    @POST("pelanggan/{id}/buka-isolir") suspend fun bukaIsolir(@Path("id") id: Int): MessageResponse
+    @POST("pelanggan/{id}/isolir") suspend fun isolirPelanggan(@Path("id") id: Int): MessageResponse
+    @POST("pelanggan/{id}/disconnect") suspend fun disconnectSession(@Path("id") id: Int): MessageResponse
+
     @GET("tagihan") suspend fun getSemuaTagihan(@Query("page") page: Int = 1, @Query("status") status: String? = null, @Query("search") search: String? = null, @Query("pelanggan_id") pelangganId: Int? = null): TagihanResponse
     @GET("tagihan/{id}") suspend fun getTagihanDetail(@Path("id") id: Int): DetailTagihanResponse
     @GET("tagihan/{id}/bayar") suspend fun getFormPembayaran(@Path("id") id: Int): DetailTagihanResponse
+
     @GET("pembayaran") suspend fun getPembayaranHistory(@Query("page") page: Int = 1, @Query("search") search: String? = null): PembayaranHistoryResponse
     @GET("pembayaran/{id}") suspend fun getDetailPembayaran(@Path("id") id: Int): PembayaranDetailResponse
     @POST("pembayaran") suspend fun simpanPembayaran(@Body request: PembayaranRequest): PembayaranResponse
     @GET("pembayaran/{id}/invoice") suspend fun getInvoice(@Path("id") id: Int): PembayaranDetailResponse
     @GET("pembayaran/{id}/pdf") suspend fun getInvoicePdf(@Path("id") id: Int): Response<ResponseBody>
+
     @GET("paket") suspend fun getPaket(): PaketResponse
     @GET("paket/{id}") suspend fun getDetailPaket(@Path("id") id: Int): PaketDetailResponse
     @POST("paket") suspend fun tambahPaket(@Body request: PaketRequest): Paket
     @PUT("paket/{id}") suspend fun updatePaket(@Path("id") id: Int, @Body request: PaketRequest): Paket
     @DELETE("paket/{id}") suspend fun hapusPaket(@Path("id") id: Int): MessageResponse
+
     @GET("router") suspend fun getRouter(): RouterResponse
     @GET("router/{id}/profiles") suspend fun getProfiles(@Path("id") id: Int): ProfileResponse
     @GET("router/{id}/test") suspend fun testRouter(@Path("id") id: Int): MessageResponse
