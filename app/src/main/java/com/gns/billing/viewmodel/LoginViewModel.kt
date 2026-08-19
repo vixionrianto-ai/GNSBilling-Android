@@ -12,42 +12,33 @@ import org.json.JSONObject
 import retrofit2.HttpException
 
 class LoginViewModel : ViewModel() {
-
     private val repository = AuthRepository()
-
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _loginState.value = LoginState.Loading
-
             try {
-                val response = repository.login(email, password)
-
-                if (response.isSuccessful && response.body() != null) {
-                    val body = response.body()!!
-                    SessionProvider.token = body.data?.token
-                    _loginState.value = LoginState.Success(body)
+                val response = repository.login(email.trim(), password)
+                val data = response.body()?.data
+                if (response.isSuccessful && data != null) {
+                    SessionProvider.token = data.token
+                    _loginState.value = LoginState.Success(response.body()!!)
                 } else {
-                    _loginState.value = LoginState.Error("Email atau Password salah")
-                }
-            } catch (e: Exception) {
-                val errorMsg = if (e is HttpException) {
-                    try {
-                        val errorBody = e.response()?.errorBody()?.string()
-                        JSONObject(errorBody ?: "{}").optString(
-                            "message",
-                            "Login gagal (${e.code()})"
+                    val message = try {
+                        JSONObject(response.errorBody()?.string() ?: "{}").optString(
+                            "message", "Login gagal (${response.code()})"
                         )
                     } catch (_: Exception) {
-                        "Login gagal (${e.code()})"
+                        "Login gagal (${response.code()})"
                     }
-                } else {
-                    e.localizedMessage ?: "Gagal terhubung ke server"
+                    _loginState.value = LoginState.Error(message)
                 }
-
-                _loginState.value = LoginState.Error(errorMsg)
+            } catch (e: Exception) {
+                val message = if (e is HttpException) "Server error (${e.code()})"
+                else e.localizedMessage ?: "Gagal terhubung ke server"
+                _loginState.value = LoginState.Error(message)
             }
         }
     }
