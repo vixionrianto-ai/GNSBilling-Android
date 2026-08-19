@@ -53,6 +53,7 @@ fun PaymentDetailScreen(
                 )
                 uiState.detail != null -> {
                     val detail = uiState.detail!!
+                    val status = detail.status.orEmpty()
                     Column(
                         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -76,11 +77,11 @@ fun PaymentDetailScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Surface(
-                                    color = if (detail.status?.equals("Berhasil", true) == true || detail.status?.equals("Lunas", true) == true) Color(0xFF00897B) else Color.Gray,
+                                    color = if (status.equals("Berhasil", true) || status.equals("Lunas", true)) Color(0xFF00897B) else Color.Gray,
                                     shape = RoundedCornerShape(6.dp)
                                 ) {
                                     Text(
-                                        detail.status.orEmpty().ifEmpty { "Berhasil" },
+                                        status.ifEmpty { "Berhasil" },
                                         Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold,
