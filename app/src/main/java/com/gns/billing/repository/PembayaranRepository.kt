@@ -5,13 +5,15 @@ import com.gns.billing.model.PembayaranRequest
 import com.gns.billing.model.PembayaranResponse
 
 class PembayaranRepository {
+    suspend fun getHistory(page: Int = 1, search: String? = null) =
+        RetrofitClient.api.getPembayaranHistory(page, search)
 
-    suspend fun simpanPembayaran(
-        request: PembayaranRequest
-    ): PembayaranResponse {
+    suspend fun getDetail(id: Int) =
+        RetrofitClient.api.getDetailPembayaran(id)
 
-        return RetrofitClient.api.simpanPembayaran(request)
+    suspend fun getForm(tagihanId: Int) =
+        RetrofitClient.api.getFormPembayaran(tagihanId)
 
-    }
-
+    suspend fun simpanPembayaran(request: PembayaranRequest): PembayaranResponse =
+        RetrofitClient.api.simpanPembayaran(request)
 }
