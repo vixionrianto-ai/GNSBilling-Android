@@ -2,7 +2,8 @@ package com.gns.billing.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gns.billing.model.PembayaranHistoryItem
+import com.gns.billing.model.PembayaranHistoryResponse
+import com.gns.billing.model.PembayaranItem
 import com.gns.billing.model.PembayaranRequest
 import com.gns.billing.model.PembayaranResult
 import com.gns.billing.repository.PembayaranRepository
@@ -32,8 +33,8 @@ class PembayaranViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PembayaranUiState())
     val uiState: StateFlow<PembayaranUiState> = _uiState
 
-    private val _historyList = MutableStateFlow<List<PembayaranHistoryItem>>(emptyList())
-    val historyList: StateFlow<List<PembayaranHistoryItem>> = _historyList
+    private val _historyList = MutableStateFlow<List<PembayaranItem>>(emptyList())
+    val historyList: StateFlow<List<PembayaranItem>> = _historyList
 
     private val _loadingHistory = MutableStateFlow(false)
     val loadingHistory: StateFlow<Boolean> = _loadingHistory
@@ -75,8 +76,8 @@ class PembayaranViewModel : ViewModel() {
         viewModelScope.launch {
             _loadingHistory.value = true
             try {
-                val response = repository.getHistory(page, search)
-                if (response.data != null) _historyList.value = response.data
+                val response: PembayaranHistoryResponse = repository.getHistory(page, search)
+                _historyList.value = response.data?.data ?: emptyList()
             } catch (_: Exception) {
                 // Screen can display the existing state; transaction rules remain server-side.
             } finally {
