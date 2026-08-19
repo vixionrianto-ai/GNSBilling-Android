@@ -18,71 +18,45 @@ class RouterViewModel : ViewModel() {
     val loading: StateFlow<Boolean> = _loading
     private val _connectionMessage = MutableStateFlow<String?>(null)
     val connectionMessage: StateFlow<String?> = _connectionMessage
-    private val _operationMessage = MutableStateFlow<String?>(null)
-    val operationMessage: StateFlow<String?> = _operationMessage
 
-    fun loadRouter() {
-        viewModelScope.launch {
-            _loading.value = true
-            try { _router.value = repository.getRouter().data }
-            catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal memuat router." }
-            finally { _loading.value = false }
-        }
+    fun loadRouter() = viewModelScope.launch {
+        _loading.value = true
+        try { _router.value = repository.getRouter().data }
+        catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal memuat router." }
+        finally { _loading.value = false }
     }
 
-    fun testRouter(routerId: Int) {
-        viewModelScope.launch {
-            _loading.value = true; _connectionMessage.value = null
-            try { _connectionMessage.value = repository.testRouter(routerId).message ?: "Tes koneksi selesai." }
-            catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal menguji koneksi." }
-            finally { _loading.value = false }
-        }
+    fun testRouter(routerId: Int) = viewModelScope.launch {
+        _loading.value = true; _connectionMessage.value = null
+        try { _connectionMessage.value = repository.testRouter(routerId).message ?: "Tes koneksi selesai." }
+        catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal menguji koneksi." }
+        finally { _loading.value = false }
     }
 
-    fun loadProfiles(routerId: Int) {
-        viewModelScope.launch {
-            try { _profiles.value = repository.getProfiles(routerId).data }
-            catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal memuat profile." }
-        }
+    fun loadProfiles(routerId: Int) = viewModelScope.launch {
+        try { _profiles.value = repository.getProfiles(routerId).data }
+        catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal memuat profile." }
     }
 
-    fun createSecret(routerId: Int, username: String, password: String, profile: String, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val response = repository.createSecret(routerId, username, password, profile)
-                onResult(response.success, response.message ?: "Operasi selesai.")
-                if (response.success) loadProfiles(routerId)
-            } catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal terhubung ke server.") }
-        }
+    fun createSecret(routerId: Int, username: String, password: String, service: String, profile: String, onResult: (Boolean, String) -> Unit) = viewModelScope.launch {
+        try { val r = repository.createSecret(routerId, username, password, service, profile); onResult(r.success, r.message ?: "Operasi selesai.") }
+        catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal terhubung ke server.") }
     }
 
-    fun deleteSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try { val r = repository.deleteSecret(routerId, secret); onResult(r.success, r.message ?: "Operasi selesai."); if (r.success) loadProfiles(routerId) }
-            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal menghapus secret.") }
-        }
+    fun updateSecret(routerId: Int, secret: String, username: String, password: String, service: String, profile: String, disabled: Boolean, onResult: (Boolean, String) -> Unit) = viewModelScope.launch {
+        try { val r = repository.updateSecret(routerId, secret, username, password, service, profile, if (disabled) "true" else "false"); onResult(r.success, r.message ?: "Operasi selesai.") }
+        catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal memperbarui secret.") }
     }
 
-    fun enableSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try { val r = repository.enableSecret(routerId, secret); onResult(r.success, r.message ?: "Operasi selesai.") }
-            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal mengaktifkan secret.") }
-        }
+    fun deleteSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) = operation(onResult) { repository.deleteSecret(routerId, secret) }
+    fun enableSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) = operation(onResult) { repository.enableSecret(routerId, secret) }
+    fun disableSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) = operation(onResult) { repository.disableSecret(routerId, secret) }
+    fun deleteProfile(routerId: Int, profile: String, onResult: (Boolean, String) -> Unit) = operation(onResult) { repository.deleteProfile(routerId, profile) }
+
+    private fun operation(onResult: (Boolean, String) -> Unit, action: suspend () -> com.gns.billing.model.MessageResponse) = viewModelScope.launch {
+        try { val r = action(); onResult(r.success, r.message ?: "Operasi selesai.") }
+        catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal terhubung ke server.") }
     }
 
-    fun disableSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try { val r = repository.disableSecret(routerId, secret); onResult(r.success, r.message ?: "Operasi selesai.") }
-            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal menonaktifkan secret.") }
-        }
-    }
-
-    fun deleteProfile(routerId: Int, profile: String, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try { val r = repository.deleteProfile(routerId, profile); onResult(r.success, r.message ?: "Operasi selesai."); if (r.success) loadProfiles(routerId) }
-            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal menghapus profile.") }
-        }
-    }
-
-    fun clearMessage() { _connectionMessage.value = null; _operationMessage.value = null }
+    fun clearMessage() { _connectionMessage.value = null }
 }
