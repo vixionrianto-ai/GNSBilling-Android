@@ -8,8 +8,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // Laravel GNS API (routes are registered under /api, not /api/v1).
-    private const val BASE_URL = "http://192.168.1.22/GNS_DEV/public/api/"
+    // Laravel GNS API. The canonical Laravel routes are registered under /api/v1.
+    private const val BASE_URL = "http://192.168.1.22/GNS_DEV/public/api/v1/"
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor())
