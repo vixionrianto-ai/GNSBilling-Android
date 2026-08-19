@@ -31,9 +31,7 @@ fun LaporanScreen(
     val context = LocalContext.current
     var showFilterDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadHistory()
-    }
+    LaunchedEffect(Unit) { viewModel.loadHistory() }
 
     Scaffold(
         topBar = {
@@ -57,45 +55,27 @@ fun LaporanScreen(
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             if (isLoading && historyList.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
                         Card(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    "Riwayat Transaksi Masuk",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text("Riwayat Transaksi Masuk", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    "Data transaksi diambil langsung dari server Laravel.",
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                                Text("Data transaksi diambil langsung dari server Laravel.", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
 
                     if (historyList.isEmpty()) {
                         item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
+                            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                 Text("Belum ada data laporan transaksi.")
                             }
                         }
@@ -103,23 +83,15 @@ fun LaporanScreen(
                         items(historyList) { item ->
                             Card(modifier = Modifier.fillMaxWidth()) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Text(item.getNamaPelanggan(), fontWeight = FontWeight.Bold)
-                                        Text(
-                                            "INV: ${item.invoice_no ?: "-"}",
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
+                                        Text(item.tagihan?.pelanggan?.nama ?: "Pelanggan -", fontWeight = FontWeight.Bold)
+                                        Text("INV: ${item.invoice_no ?: item.tagihan?.invoice ?: "-"}", style = MaterialTheme.typography.bodySmall)
                                     }
-                                    Text(
-                                        formatRupiah(item.getNominalDouble()),
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Text(formatRupiah(item.dibayar), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -133,14 +105,8 @@ fun LaporanScreen(
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
             title = { Text("Filter Laporan") },
-            text = {
-                Text("Filter laporan akan mengikuti parameter dan data yang disediakan API server.")
-            },
-            confirmButton = {
-                TextButton(onClick = { showFilterDialog = false }) {
-                    Text("Tutup")
-                }
-            }
+            text = { Text("Filter laporan akan mengikuti parameter dan data yang disediakan API server.") },
+            confirmButton = { TextButton(onClick = { showFilterDialog = false }) { Text("Tutup") } }
         )
     }
 }
