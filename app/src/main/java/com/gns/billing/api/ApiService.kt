@@ -14,9 +14,10 @@ interface ApiService {
     @GET("dashboard") suspend fun getDashboard(): DashboardResponse
     @GET("pelanggan") suspend fun getPelanggan(@Query("page") page: Int = 1, @Query("search") search: String = "", @Query("status") status: String = ""): PelangganResponse
     @GET("pelanggan/{id}") suspend fun getDetailPelanggan(@Path("id") id: Int): PelangganDetailResponse
-    @POST("pelanggan") suspend fun tambahPelanggan(@Body request: PelangganRequest): PelangganDetailResponse
-    @PUT("pelanggan/{id}") suspend fun updatePelanggan(@Path("id") id: Int, @Body request: PelangganRequest): PelangganDetailResponse
+    @POST("pelanggan") suspend fun tambahPelanggan(@Body request: PelangganRequest): MessageResponse
+    @PUT("pelanggan/{id}") suspend fun updatePelanggan(@Path("id") id: Int, @Body request: PelangganRequest): MessageResponse
     @DELETE("pelanggan/{id}") suspend fun hapusPelanggan(@Path("id") id: Int): MessageResponse
+    @POST("pelanggan/sync") suspend fun syncPelanggan(): MessageResponse
     @GET("tagihan") suspend fun getSemuaTagihan(@Query("page") page: Int = 1, @Query("status") status: String? = null, @Query("search") search: String? = null): TagihanResponse
     @GET("tagihan/{id}") suspend fun getTagihanDetail(@Path("id") id: Int): DetailTagihanResponse
     @GET("tagihan/{id}/bayar") suspend fun getFormPembayaran(@Path("id") id: Int): DetailTagihanResponse
