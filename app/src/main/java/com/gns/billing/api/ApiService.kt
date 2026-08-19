@@ -14,6 +14,7 @@ interface ApiService {
     @GET("dashboard") suspend fun getDashboard(): DashboardResponse
     @GET("pelanggan") suspend fun getPelanggan(@Query("page") page: Int = 1, @Query("search") search: String = "", @Query("status") status: String = ""): PelangganResponse
     @GET("pelanggan/{id}") suspend fun getDetailPelanggan(@Path("id") id: Int): PelangganDetailResponse
+    @GET("pelanggan/{id}/tagihan") suspend fun getTagihanPelanggan(@Path("id") id: Int): TagihanResponse
     @POST("pelanggan") suspend fun tambahPelanggan(@Body request: PelangganRequest): MessageResponse
     @PUT("pelanggan/{id}") suspend fun updatePelanggan(@Path("id") id: Int, @Body request: PelangganRequest): MessageResponse
     @DELETE("pelanggan/{id}") suspend fun hapusPelanggan(@Path("id") id: Int): MessageResponse
