@@ -2,6 +2,7 @@ package com.gns.billing.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gns.billing.model.MessageResponse
 import com.gns.billing.model.Pelanggan
 import com.gns.billing.model.PelangganRequest
 import com.gns.billing.repository.PelangganRepository
@@ -21,6 +22,8 @@ class PelangganViewModel : ViewModel() {
     val loading: StateFlow<Boolean> = _loading
     private val _success = MutableStateFlow(false)
     val success: StateFlow<Boolean> = _success
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -44,44 +47,95 @@ class PelangganViewModel : ViewModel() {
                     _pelanggan.value = if (currentPage == 1) response.data else _pelanggan.value + response.data
                     lastPage = response.pagination.last_page
                     if (currentPage < lastPage) currentPage++
+                } else {
+                    _error.value = "Gagal memuat data pelanggan"
                 }
-            } catch (e: Exception) { _error.value = readableError(e) }
-            finally { _loading.value = false }
+            } catch (e: Exception) {
+                _error.value = readableError(e)
+            } finally {
+                _loading.value = false
+            }
         }
     }
 
-    fun nextPage() { if (currentPage <= lastPage) loadPelanggan() }
-    fun previousPage() { if (currentPage > 1) { currentPage = (currentPage - 2).coerceAtLeast(1); loadPelanggan(true) } }
+    fun nextPage() {
+        if (currentPage <= lastPage) loadPelanggan()
+    }
+
+    fun previousPage() {
+        if (currentPage > 1) {
+            currentPage = (currentPage - 2).coerceAtLeast(1)
+            loadPelanggan(true)
+        }
+    }
 
     fun getDetailPelanggan(id: Int) {
         viewModelScope.launch {
-            _loading.value = true; _error.value = null
-            try { _detailPelanggan.value = repository.getDetailPelanggan(id) }
-            catch (e: Exception) { _error.value = readableError(e) }
-            finally { _loading.value = false }
+            _loading.value = true
+            _error.value = null
+            try {
+                _detailPelanggan.value = repository.getDetailPelanggan(id)
+            } catch (e: Exception) {
+                _error.value = readableError(e)
+            } finally {
+                _loading.value = false
+            }
         }
     }
 
-    fun tambahPelanggan(request: PelangganRequest) = mutate { repository.tambahPelanggan(request) }
-    fun updatePelanggan(id: Int, request: PelangganRequest) = mutate { repository.updatePelanggan(id, request) }
-    fun hapusPelanggan(id: Int) = mutate { repository.hapusPelanggan(id) }
+    fun tambahPelanggan(request: PelangganRequest) = mutate {
+        repository.tambahPelanggan(request)
+    }
 
-    private fun mutate(action: suspend () -> Any?) {
+    fun updatePelanggan(id: Int, request: PelangganRequest) = mutate {
+        repository.updatePelanggan(id, request)
+    }
+
+    fun hapusPelanggan(id: Int) = mutate {
+        repository.hapusPelanggan(id)
+    }
+
+    private fun mutate(action: suspend () -> MessageResponse) {
         viewModelScope.launch {
-            _loading.value = true; _success.value = false; _error.value = null
-            try { action(); _success.value = true; loadPelanggan(true) }
-            catch (e: Exception) { _error.value = readableError(e) }
-            finally { _loading.value = false }
+            _loading.value = true
+            _success.value = false
+            _message.value = null
+            _error.value = null
+
+            try {
+                val response = action()
+
+                if (response.success) {
+                    _success.value = true
+                    _message.value = response.message
+                    loadPelanggan(true)
+                } else {
+                    _error.value = response.message.ifBlank { "Operasi gagal" }
+                }
+            } catch (e: Exception) {
+                _error.value = readableError(e)
+            } finally {
+                _loading.value = false
+            }
         }
     }
 
     private fun readableError(e: Exception): String {
         if (e is HttpException) {
-            return try { JSONObject(e.response()?.errorBody()?.string() ?: "{}").optString("message", "Server error (${e.code()})") }
-            catch (_: Exception) { "Server error (${e.code()})" }
+            return try {
+                JSONObject(e.response()?.errorBody()?.string() ?: "{}")
+                    .optString("message", "Server error (${e.code()})")
+            } catch (_: Exception) {
+                "Server error (${e.code()})"
+            }
         }
         return e.localizedMessage ?: "Terjadi kesalahan"
     }
 
-    fun clearState() { _success.value = false; _error.value = null; _detailPelanggan.value = null }
+    fun clearState() {
+        _success.value = false
+        _message.value = null
+        _error.value = null
+        _detailPelanggan.value = null
+    }
 }
