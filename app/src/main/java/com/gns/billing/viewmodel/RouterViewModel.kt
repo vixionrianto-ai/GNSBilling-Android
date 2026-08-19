@@ -18,33 +18,31 @@ class RouterViewModel : ViewModel() {
     val loading: StateFlow<Boolean> = _loading
     private val _connectionMessage = MutableStateFlow<String?>(null)
     val connectionMessage: StateFlow<String?> = _connectionMessage
+    private val _operationMessage = MutableStateFlow<String?>(null)
+    val operationMessage: StateFlow<String?> = _operationMessage
 
     fun loadRouter() {
         viewModelScope.launch {
             _loading.value = true
             try { _router.value = repository.getRouter().data }
-            catch (e: Exception) { _connectionMessage.value = e.localizedMessage }
+            catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal memuat router." }
             finally { _loading.value = false }
         }
     }
 
     fun testRouter(routerId: Int) {
         viewModelScope.launch {
-            _loading.value = true
-            _connectionMessage.value = null
-            try {
-                val response = repository.testRouter(routerId)
-                _connectionMessage.value = response.message ?: "Tes koneksi selesai."
-            } catch (e: Exception) {
-                _connectionMessage.value = e.localizedMessage ?: "Gagal menguji koneksi."
-            } finally { _loading.value = false }
+            _loading.value = true; _connectionMessage.value = null
+            try { _connectionMessage.value = repository.testRouter(routerId).message ?: "Tes koneksi selesai." }
+            catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal menguji koneksi." }
+            finally { _loading.value = false }
         }
     }
 
     fun loadProfiles(routerId: Int) {
         viewModelScope.launch {
             try { _profiles.value = repository.getProfiles(routerId).data }
-            catch (e: Exception) { _connectionMessage.value = e.localizedMessage }
+            catch (e: Exception) { _connectionMessage.value = e.localizedMessage ?: "Gagal memuat profile." }
         }
     }
 
@@ -52,12 +50,39 @@ class RouterViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = repository.createSecret(routerId, username, password, profile)
-                onResult(response.success, response.message ?: if (response.success) "Secret PPPoE berhasil dibuat." else "Gagal membuat secret.")
-            } catch (e: Exception) {
-                onResult(false, e.localizedMessage ?: "Gagal terhubung ke server.")
-            }
+                onResult(response.success, response.message ?: "Operasi selesai.")
+                if (response.success) loadProfiles(routerId)
+            } catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal terhubung ke server.") }
         }
     }
 
-    fun clearMessage() { _connectionMessage.value = null }
+    fun deleteSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try { val r = repository.deleteSecret(routerId, secret); onResult(r.success, r.message ?: "Operasi selesai."); if (r.success) loadProfiles(routerId) }
+            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal menghapus secret.") }
+        }
+    }
+
+    fun enableSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try { val r = repository.enableSecret(routerId, secret); onResult(r.success, r.message ?: "Operasi selesai.") }
+            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal mengaktifkan secret.") }
+        }
+    }
+
+    fun disableSecret(routerId: Int, secret: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try { val r = repository.disableSecret(routerId, secret); onResult(r.success, r.message ?: "Operasi selesai.") }
+            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal menonaktifkan secret.") }
+        }
+    }
+
+    fun deleteProfile(routerId: Int, profile: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try { val r = repository.deleteProfile(routerId, profile); onResult(r.success, r.message ?: "Operasi selesai."); if (r.success) loadProfiles(routerId) }
+            catch (e: Exception) { onResult(false, e.localizedMessage ?: "Gagal menghapus profile.") }
+        }
+    }
+
+    fun clearMessage() { _connectionMessage.value = null; _operationMessage.value = null }
 }
