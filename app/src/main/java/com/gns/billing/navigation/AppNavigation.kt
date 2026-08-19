@@ -46,7 +46,7 @@ fun AppNavigation() {
             e.arguments?.getString("id")?.toIntOrNull()?.let { EditPelangganScreen(navController, it) }
         }
         composable("detail_pelanggan/{id}") { e ->
-            e.arguments?.getString("id")?.toIntOrNull()?.let { DetailPelangganScreen(navController, it) }
+            e.arguments?.getString("id")?.toIntOrNull()?.let { DetailPelangganScreen(it, navController) }
         }
 
         composable("paket") { PaketScreen(navController) }
