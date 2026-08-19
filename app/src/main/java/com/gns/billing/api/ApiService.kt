@@ -18,7 +18,7 @@ interface ApiService {
     @PUT("pelanggan/{id}") suspend fun updatePelanggan(@Path("id") id: Int, @Body request: PelangganRequest): MessageResponse
     @DELETE("pelanggan/{id}") suspend fun hapusPelanggan(@Path("id") id: Int): MessageResponse
     @POST("pelanggan/sync") suspend fun syncPelanggan(): MessageResponse
-    @GET("tagihan") suspend fun getSemuaTagihan(@Query("page") page: Int = 1, @Query("status") status: String? = null, @Query("search") search: String? = null): TagihanResponse
+    @GET("tagihan") suspend fun getSemuaTagihan(@Query("page") page: Int = 1, @Query("status") status: String? = null, @Query("search") search: String? = null, @Query("pelanggan_id") pelangganId: Int? = null): TagihanResponse
     @GET("tagihan/{id}") suspend fun getTagihanDetail(@Path("id") id: Int): DetailTagihanResponse
     @GET("tagihan/{id}/bayar") suspend fun getFormPembayaran(@Path("id") id: Int): DetailTagihanResponse
     @GET("pembayaran") suspend fun getPembayaranHistory(@Query("page") page: Int = 1, @Query("search") search: String? = null): PembayaranHistoryResponse
@@ -43,6 +43,6 @@ interface ApiService {
     @PUT("router/{id}/ppp-secret/{secret}/disable") suspend fun disableSecret(@Path("id") id: Int, @Path("secret") secret: String): MessageResponse
     @GET("router/{id}/ppp-profile") suspend fun getPppProfile(@Path("id") id: Int): PppProfileResponse
     @FormUrlEncoded @POST("router/{id}/ppp-profile") suspend fun createProfile(@Path("id") id: Int, @Field("name") name: String, @Field("local_address") localAddress: String, @Field("remote_address") remoteAddress: String, @Field("rate_limit") rateLimit: String, @Field("only_one") onlyOne: String): MessageResponse
-    @FormUrlEncoded @PUT("router/{id}/ppp-profile/{profile}") suspend fun updateProfile(@Path("id") id: Int, @Path("profile") profile: String, @Field("name") name: String, @Field("local_address") localAddress: String, @Field("remote_address") remoteAddress: String, @Field("rate_limit") rateLimit: String, @Field("only_one") onlyOne: String): MessageResponse
-    @DELETE("router/{id}/ppp-profile/{profile}") suspend fun deleteProfile(@Path("id") id: Int, @Path("profile") profile: String): MessageResponse
+    @FormUrlEncoded @PUT("router/{id}/ppp-profile/{profile}") suspend fun updateProfile(@Path("id") id: Int, @Path("profile") profile: String, @Field("name") name: String, @Field("password") password: String, @Field("service") service: String, @Field("profile") profile: String, @Field("disabled") disabled: String): MessageResponse
+    @DELETE("router/{id}/ppp-profile/{profile}") suspend fun deleteProfile(@Path("id") profile: Int, @Path("profile") profile: String): MessageResponse
 }
