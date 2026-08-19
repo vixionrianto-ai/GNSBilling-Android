@@ -32,10 +32,7 @@ fun RiwayatPembayaranScreen(
                 title = { Text("Riwayat Pembayaran", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 }
             )
@@ -48,129 +45,99 @@ fun RiwayatPembayaranScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 1. Kolom Pencarian
             OutlinedTextField(
                 value = uiState.searchQuery,
-                onValueChange = { viewModel.onSearchQueryChange(it) },
+                onValueChange = viewModel::onSearchQueryChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Cari invoice atau nama pelanggan...") },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = "Cari")
-                },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Cari") },
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
                 singleLine = true
             )
 
-            // 2. Tampilan Indikator Loading / Error / Konten
-            if (uiState.loading && uiState.history == null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else if (uiState.error != null && uiState.history == null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Error: ${uiState.error}",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            } else {
-                // 3. Daftar Histori Transaksi dengan LazyColumn
-                val listTransaksi = uiState.history?.data ?: emptyList()
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item {
-                        Text(
-                            text = "Daftar Transaksi (${listTransaksi.size})",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+            when {
+                uiState.loading && uiState.history == null -> {
+                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
+                }
+                uiState.error != null && uiState.history == null -> {
+                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                        Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                else -> {
+                    val listTransaksi = uiState.history?.data?.data ?: emptyList()
 
-                    if (listTransaksi.isEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Belum ada riwayat pembayaran",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                            Text(
+                                "Daftar Transaksi (${listTransaksi.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
                         }
-                    } else {
-                        items(listTransaksi) { itemTransaksi ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        val idTransaksi = itemTransaksi.id ?: 0
-                                        navController.navigate("detail_pembayaran/$idTransaksi")
-                                    },
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column(
+
+                        if (listTransaksi.isEmpty()) {
+                            item {
+                                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                                    Text("Belum ada riwayat pembayaran", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        } else {
+                            items(listTransaksi) { itemTransaksi ->
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                        .clickable { navController.navigate("detail_pembayaran/${itemTransaksi.id}") },
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                 ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Text(
-                                            text = itemTransaksi.invoice_no ?: "-",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        // Menggunakan itemTransaksi.total sesuai model data asli aplikasi Anda
-                                        Text(
-                                            text = formatRupiah(itemTransaksi.getNominalDouble()),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                itemTransaksi.invoice_no ?: itemTransaksi.tagihan?.invoice ?: "-",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                formatRupiah(itemTransaksi.dibayar),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
 
-                                    Text(
-                                        text = "Pelanggan: ${itemTransaksi.pelanggan_nama ?: "-"}",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
+                                        Text(
+                                            "Pelanggan: ${itemTransaksi.tagihan?.pelanggan?.nama ?: "-"}",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
 
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Metode: ${itemTransaksi.metode ?: "Cash"}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            text = itemTransaksi.tanggal ?: "",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                "Metode: ${itemTransaksi.metode ?: "Cash"}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                itemTransaksi.tanggal_bayar ?: "",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                 }
                             }
