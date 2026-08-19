@@ -76,11 +76,11 @@ fun PaymentDetailScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Surface(
-                                    color = if (detail.status.equals("Berhasil", true) || detail.status.equals("Lunas", true)) Color(0xFF00897B) else Color.Gray,
+                                    color = if (detail.status?.equals("Berhasil", true) == true || detail.status?.equals("Lunas", true) == true) Color(0xFF00897B) else Color.Gray,
                                     shape = RoundedCornerShape(6.dp)
                                 ) {
                                     Text(
-                                        detail.status.ifEmpty { "Berhasil" },
+                                        detail.status.orEmpty().ifEmpty { "Berhasil" },
                                         Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold,
