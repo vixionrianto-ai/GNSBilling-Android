@@ -4,7 +4,7 @@ import com.gns.billing.api.RetrofitClient
 
 class TagihanRepository {
     suspend fun getTagihan(pelangganId: Int): TagihanResponse =
-        RetrofitClient.api.getTagihanPelanggan(pelangganId)
+        RetrofitClient.api.getSemuaTagihan(pelangganId = pelangganId)
 
     suspend fun getTagihanDetail(id: Int): DetailTagihanResponse =
         RetrofitClient.api.getTagihanDetail(id)
