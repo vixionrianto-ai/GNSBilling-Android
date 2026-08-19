@@ -1,19 +1,20 @@
 package com.gns.billing.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gns.billing.api.RetrofitClient
 import com.gns.billing.model.PembayaranHistoryItem
 import com.gns.billing.model.PembayaranRequest
 import com.gns.billing.model.PembayaranResult
-import com.gns.billing.model.PembayaranSummaryResponse
+import com.gns.billing.repository.PembayaranRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.HttpException
 
-// UI hanya menyimpan input operator dan hasil resmi dari server.
+// Android hanya menyimpan input operator dan hasil resmi dari Laravel.
+// Tidak ada perhitungan billing, status, alokasi, saldo, atau kembalian di sini.
 data class PembayaranUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
@@ -26,40 +27,26 @@ data class PembayaranUiState(
 )
 
 class PembayaranViewModel : ViewModel() {
+    private val repository = PembayaranRepository()
 
     private val _uiState = MutableStateFlow(PembayaranUiState())
     val uiState: StateFlow<PembayaranUiState> = _uiState
 
-    fun onMetodeChange(newMetode: String) {
-        _uiState.update { it.copy(metode = newMetode) }
-    }
+    private val _historyList = MutableStateFlow<List<PembayaranHistoryItem>>(emptyList())
+    val historyList: StateFlow<List<PembayaranHistoryItem>> = _historyList
 
-    fun onNominalChange(newNominal: String) {
-        _uiState.update { it.copy(nominal = newNominal) }
-    }
+    private val _loadingHistory = MutableStateFlow(false)
+    val loadingHistory: StateFlow<Boolean> = _loadingHistory
 
-    fun onBiayaAdminChange(newBiayaAdmin: String) {
-        _uiState.update { it.copy(biayaAdmin = newBiayaAdmin) }
-    }
-
-    fun onKeteranganChange(newKeterangan: String) {
-        _uiState.update { it.copy(keterangan = newKeterangan) }
-    }
+    fun onMetodeChange(value: String) = _uiState.update { it.copy(metode = value) }
+    fun onNominalChange(value: String) = _uiState.update { it.copy(nominal = value) }
+    fun onBiayaAdminChange(value: String) = _uiState.update { it.copy(biayaAdmin = value) }
+    fun onKeteranganChange(value: String) = _uiState.update { it.copy(keterangan = value) }
 
     fun submitPembayaran(tagihanId: Int) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    message = null,
-                    isSuccess = false,
-                    serverResult = null
-                )
-            }
-
+            _uiState.update { it.copy(isLoading = true, isSuccess = false, message = null, serverResult = null) }
             try {
-                // Tidak ada perhitungan status/kembalian di Android.
-                // Laravel menjadi satu-satunya sumber perhitungan pembayaran.
                 val request = PembayaranRequest(
                     tagihan_id = tagihanId,
                     dibayar = _uiState.value.nominal.toDoubleOrNull() ?: 0.0,
@@ -67,8 +54,7 @@ class PembayaranViewModel : ViewModel() {
                     biaya_admin = _uiState.value.biayaAdmin.toDoubleOrNull() ?: 0.0,
                     keterangan = _uiState.value.keterangan.ifBlank { null }
                 )
-
-                val response = RetrofitClient.api.simpanPembayaran(request)
+                val response = repository.simpanPembayaran(request)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -79,58 +65,31 @@ class PembayaranViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        isSuccess = false,
-                        message = e.localizedMessage ?: "Gagal memproses pembayaran."
-                    )
+                    it.copy(isLoading = false, isSuccess = false, message = readableError(e))
                 }
             }
         }
     }
 
-    fun resetMessage() {
-        _uiState.update { it.copy(message = null) }
-    }
-
-    fun resetUiState() {
-        _uiState.value = PembayaranUiState()
-    }
-
-    private val _historyList = MutableStateFlow<List<PembayaranHistoryItem>>(emptyList())
-    val historyList: StateFlow<List<PembayaranHistoryItem>> = _historyList
-
-    private val _summary = MutableStateFlow<PembayaranSummaryResponse?>(null)
-    val summary: StateFlow<PembayaranSummaryResponse?> = _summary
-
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading
-
-    fun loadHistory() {
+    fun loadHistory(page: Int = 1, search: String? = null) {
         viewModelScope.launch {
-            _loading.value = true
+            _loadingHistory.value = true
             try {
-                val response = RetrofitClient.api.getPembayaranHistory()
-                if (response.data != null) {
-                    _historyList.value = response.data
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+                val response = repository.getHistory(page, search)
+                if (response.data != null) _historyList.value = response.data
+            } catch (_: Exception) {
+                // Screen can display the existing state; transaction rules remain server-side.
             } finally {
-                _loading.value = false
+                _loadingHistory.value = false
             }
         }
     }
 
-    fun loadSummary() {
-        viewModelScope.launch {
-            try {
-                val response = RetrofitClient.api.getPembayaranSummary()
-                _summary.value = response
-                Log.d("DEBUG_SUMMARY", "Response dari server: $response")
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+    fun resetMessage() = _uiState.update { it.copy(message = null) }
+    fun resetUiState() { _uiState.value = PembayaranUiState() }
+
+    private fun readableError(e: Exception): String = if (e is HttpException) {
+        try { JSONObject(e.response()?.errorBody()?.string() ?: "{}").optString("message", "Server error (${e.code()})") }
+        catch (_: Exception) { "Server error (${e.code()})" }
+    } else e.localizedMessage ?: "Gagal memproses pembayaran."
 }
