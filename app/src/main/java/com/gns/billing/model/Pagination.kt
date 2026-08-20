@@ -1,17 +1,10 @@
 package com.gns.billing.model
 
 data class Pagination(
-
-    val current_page: Int,
-
-    val last_page: Int,
-
-    val per_page: Int,
-
-    val total: Int,
-
-    val from: Int?,
-
-    val to: Int?
-
+    val current_page: Int = 1,
+    val last_page: Int = 1,
+    val per_page: Int = 20,
+    val total: Int = 0,
+    val from: Int? = null,
+    val to: Int? = null
 )
