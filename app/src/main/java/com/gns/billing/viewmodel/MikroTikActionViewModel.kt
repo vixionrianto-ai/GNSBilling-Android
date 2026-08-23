@@ -16,7 +16,6 @@ data class MikroTikActionUiState(
 )
 
 class MikroTikActionViewModel : ViewModel() {
-
     private val _uiState = MutableStateFlow(MikroTikActionUiState())
     val uiState: StateFlow<MikroTikActionUiState> = _uiState.asStateFlow()
 
@@ -24,16 +23,20 @@ class MikroTikActionViewModel : ViewModel() {
         _uiState.update { MikroTikActionUiState() }
     }
 
-    fun bukaIsolir(pelangganId: Int) {
-        executeAction { RetrofitClient.api.bukaIsolir(pelangganId) }
+    fun testRouter(routerId: Int) {
+        executeAction { RetrofitClient.api.testRouter(routerId) }
     }
 
-    fun isolir(pelangganId: Int) {
-        executeAction { RetrofitClient.api.isolirPelanggan(pelangganId) }
+    fun disconnectSecret(routerId: Int, secret: String) {
+        executeAction { RetrofitClient.api.disconnectSecret(routerId, secret) }
     }
 
-    fun disconnect(pelangganId: Int) {
-        executeAction { RetrofitClient.api.disconnectSession(pelangganId) }
+    fun enableSecret(routerId: Int, secret: String) {
+        executeAction { RetrofitClient.api.enableSecret(routerId, secret) }
+    }
+
+    fun disableSecret(routerId: Int, secret: String) {
+        executeAction { RetrofitClient.api.disableSecret(routerId, secret) }
     }
 
     private fun executeAction(action: suspend () -> com.gns.billing.model.MessageResponse) {
@@ -41,11 +44,11 @@ class MikroTikActionViewModel : ViewModel() {
             _uiState.update { it.copy(isLoading = true, successMessage = null, errorMessage = null) }
             try {
                 val response = action()
-                // Menyesuaikan dengan struktur MessageResponse (biasanya ada status/success atau message)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        successMessage = response.message.ifEmpty { "Aksi MikroTik berhasil dieksekusi." }
+                        successMessage = if (response.success) response.message.ifEmpty { "Aksi berhasil." } else null,
+                        errorMessage = if (!response.success) response.message.ifEmpty { "Aksi gagal." } else null
                     )
                 }
             } catch (e: Exception) {
