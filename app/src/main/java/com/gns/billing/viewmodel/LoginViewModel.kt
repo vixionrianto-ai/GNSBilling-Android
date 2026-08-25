@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gns.billing.model.LoginState
 import com.gns.billing.repository.AuthRepository
-import com.gns.billing.session.SessionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,7 +22,6 @@ class LoginViewModel : ViewModel() {
                 val response = repository.login(email.trim(), password)
                 val data = response.body()?.data
                 if (response.isSuccessful && data != null) {
-                    SessionProvider.token = data.token
                     _loginState.value = LoginState.Success(response.body()!!)
                 } else {
                     val message = try {
