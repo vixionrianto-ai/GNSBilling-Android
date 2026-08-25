@@ -8,7 +8,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gns.billing.session.SessionManager
-import com.gns.billing.session.SessionProvider
 import com.gns.billing.tagihan.DetailTagihanScreen
 import com.gns.billing.tagihan.TagihanJatuhTempoScreen
 import com.gns.billing.tagihan.TagihanScreen
@@ -33,7 +32,6 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val sessionManager = SessionManager(context)
-    SessionProvider.token = sessionManager.getToken()
     val startDestination = if (sessionManager.isLoggedIn()) "dashboard" else "login"
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -65,24 +63,15 @@ fun AppNavigation() {
         }
 
         composable("menu_pembayaran") { PembayaranHistoryScreen(navController) }
-        composable(
-            "detail_pembayaran/{paymentId}",
-            arguments = listOf(navArgument("paymentId") { type = NavType.IntType })
-        ) { e ->
+        composable("detail_pembayaran/{paymentId}", arguments = listOf(navArgument("paymentId") { type = NavType.IntType })) { e ->
             PembayaranDetailScreen(navController, e.arguments?.getInt("paymentId") ?: 0)
         }
-        composable(
-            "pembayaran_form/{tagihanId}",
-            arguments = listOf(navArgument("tagihanId") { type = NavType.IntType })
-        ) { e ->
+        composable("pembayaran_form/{tagihanId}", arguments = listOf(navArgument("tagihanId") { type = NavType.IntType })) { e ->
             PembayaranScreen(navController, e.arguments?.getInt("tagihanId") ?: 0)
         }
 
         composable("mikrotik") { MikroTikScreen(navController) }
-        composable(
-            "router_detail/{routerId}",
-            arguments = listOf(navArgument("routerId") { type = NavType.IntType })
-        ) { e ->
+        composable("router_detail/{routerId}", arguments = listOf(navArgument("routerId") { type = NavType.IntType })) { e ->
             RouterDetailScreen(e.arguments?.getInt("routerId") ?: 0, navController)
         }
         composable("laporan") { LaporanScreen(navController) }
