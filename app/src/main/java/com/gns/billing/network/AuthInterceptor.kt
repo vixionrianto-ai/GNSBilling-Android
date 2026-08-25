@@ -23,10 +23,8 @@ class AuthInterceptor(context: Context) : Interceptor {
         val response = chain.proceed(builder.build())
 
         if (response.code == 401 && !request.url.encodedPath.endsWith("/login")) {
-            response.close()
             sessionManager.logout()
             SessionEvents.emitTimeout()
-            return response
         }
 
         return response
