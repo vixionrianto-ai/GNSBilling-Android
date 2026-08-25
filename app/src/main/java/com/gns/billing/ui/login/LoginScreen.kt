@@ -39,7 +39,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.gns.billing.model.LoginState
 import com.gns.billing.session.SessionManager
-import com.gns.billing.session.SessionProvider
 import com.gns.billing.viewmodel.LoginViewModel
 
 @Composable
@@ -63,7 +62,6 @@ fun LoginScreen(
                     name = data.user.name,
                     email = data.user.email
                 )
-                SessionProvider.token = data.token
 
                 navController.navigate("dashboard") {
                     popUpTo("login") { inclusive = true }
@@ -109,9 +107,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     label = { Text("Email") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Mail, contentDescription = null)
-                    },
+                    leadingIcon = { Icon(Icons.Default.Mail, contentDescription = null) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
@@ -121,9 +117,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     label = { Text("Password") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Lock, contentDescription = null)
-                    },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     visualTransformation = PasswordVisualTransformation()
                 )
 
