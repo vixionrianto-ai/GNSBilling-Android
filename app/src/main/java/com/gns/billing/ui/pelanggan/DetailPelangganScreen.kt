@@ -208,8 +208,19 @@ fun DetailPelangganScreen(
                     }
 
                     Button(
-                        onClick = { showMikroTikDialog = true },
+                        onClick = {
+                            if (p.router_id == null || p.username_pppoe.isNullOrBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    "Router atau username PPPoE pelanggan belum tersedia",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                showMikroTikDialog = true
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = p.router_id != null && !p.username_pppoe.isNullOrBlank(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
                         Icon(Icons.Default.Router, contentDescription = null)
@@ -222,11 +233,18 @@ fun DetailPelangganScreen(
     }
 
     if (showMikroTikDialog && detail != null) {
-        MikroTikActionDialog(
-            pelangganId = detail!!.id,
-            pelangganNama = detail!!.nama,
-            onDismiss = { showMikroTikDialog = false }
-        )
+        val p = detail!!
+        val routerId = p.router_id
+        val secret = p.username_pppoe
+
+        if (routerId != null && !secret.isNullOrBlank()) {
+            MikroTikActionDialog(
+                routerId = routerId,
+                secret = secret,
+                pelangganNama = p.nama,
+                onDismiss = { showMikroTikDialog = false }
+            )
+        }
     }
 }
 
