@@ -10,7 +10,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://192.168.1.22/GNS_DEV/public/api/v1/"
+    // PC/Laragon yang melayani GNS_DEV pada jaringan lokal.
+    private const val BASE_URL = "http://192.168.1.12/GNS_DEV/public/api/v1/"
 
     private lateinit var retrofit: Retrofit
 
