@@ -16,7 +16,8 @@ import com.gns.billing.viewmodel.MikroTikActionViewModel
 
 @Composable
 fun MikroTikActionDialog(
-    pelangganId: Int,
+    routerId: Int,
+    secret: String,
     pelangganNama: String,
     onDismiss: () -> Unit,
     viewModel: MikroTikActionViewModel = viewModel()
@@ -68,31 +69,32 @@ fun MikroTikActionDialog(
                     else -> {
                         Text("Pilih tindakan router untuk pelanggan ini:")
 
-                        // Tombol Buka Isolir
                         Button(
-                            onClick = { viewModel.bukaIsolir(pelangganId) },
+                            onClick = { viewModel.enableSecret(routerId, secret) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
                         ) {
                             Icon(Icons.Default.LockOpen, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Buka Isolir (Enable Secret)")
                         }
 
-                        // Tombol Isolir Manual
                         OutlinedButton(
-                            onClick = { viewModel.isolir(pelangganId) },
+                            onClick = { viewModel.disableSecret(routerId, secret) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
                         ) {
                             Icon(Icons.Default.Lock, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Isolir Pelanggan (Disable)")
                         }
 
-                        // Tombol Disconnect Session
                         OutlinedButton(
-                            onClick = { viewModel.disconnect(pelangganId) },
+                            onClick = { viewModel.disconnectSecret(routerId, secret) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
