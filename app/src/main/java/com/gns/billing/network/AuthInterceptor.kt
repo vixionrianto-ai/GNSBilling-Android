@@ -1,21 +1,34 @@
 package com.gns.billing.network
 
-import com.gns.billing.session.SessionProvider
+import android.content.Context
+import com.gns.billing.session.SessionEvents
+import com.gns.billing.session.SessionManager
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class AuthInterceptor : Interceptor {
+class AuthInterceptor(context: Context) : Interceptor {
+    private val sessionManager = SessionManager(context.applicationContext)
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val builder = request.newBuilder()
             .addHeader("Accept", "application/json")
             .addHeader("X-Requested-With", "XMLHttpRequest")
 
-        val token = SessionProvider.token
+        val token = sessionManager.getToken()
         if (!token.isNullOrBlank() && !request.url.encodedPath.endsWith("/login")) {
             builder.header("Authorization", "Bearer $token")
         }
 
-        return chain.proceed(builder.build())
+        val response = chain.proceed(builder.build())
+
+        if (response.code == 401 && !request.url.encodedPath.endsWith("/login")) {
+            response.close()
+            sessionManager.logout()
+            SessionEvents.emitTimeout()
+            return response
+        }
+
+        return response
     }
 }
