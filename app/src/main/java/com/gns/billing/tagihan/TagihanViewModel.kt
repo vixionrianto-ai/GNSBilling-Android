@@ -55,6 +55,17 @@ class TagihanViewModel : ViewModel() {
         }
     }
 
+    fun sendTagihanWhatsApp(id: Int, onResult: (url: String?, message: String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = repository.getTagihanWhatsApp(id)
+                onResult(response.data?.url, response.message ?: response.data?.message)
+            } catch (e: Exception) {
+                onResult(null, parseError(e))
+            }
+        }
+    }
+
     fun clearError() { _error.value = null }
 
     private fun parseError(e: Exception): String = if (e is HttpException) {
