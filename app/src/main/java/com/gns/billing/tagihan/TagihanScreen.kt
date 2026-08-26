@@ -1,5 +1,9 @@
 package com.gns.billing.tagihan
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.WhatsApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +33,7 @@ fun TagihanScreen(
     val tagihanList by viewModel.tagihanList.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+    var waLoadingId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(pelangganId) {
         viewModel.loadTagihan(pelangganId)
@@ -141,18 +147,48 @@ fun TagihanScreen(
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = "Total Tagihan:",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        text = formatRupiah(tagihan.total),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    Column {
+                                        Text(
+                                            text = "Total Tagihan:",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            text = formatRupiah(tagihan.total),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+
+                                    FilledTonalIconButton(
+                                        onClick = {
+                                            if (waLoadingId != null) return@FilledTonalIconButton
+                                            waLoadingId = tagihan.id
+                                            viewModel.sendTagihanWhatsApp(tagihan.id) { url, message ->
+                                                waLoadingId = null
+                                                if (url.isNullOrBlank()) {
+                                                    Toast.makeText(
+                                                        navController.context,
+                                                        message ?: "Link WhatsApp tidak tersedia",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                } else {
+                                                    openWhatsApp(navController.context, url)
+                                                }
+                                            }
+                                        },
+                                        enabled = waLoadingId == null,
+                                        modifier = Modifier.size(48.dp)
+                                    ) {
+                                        if (waLoadingId == tagihan.id) {
+                                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                        } else {
+                                            Icon(Icons.Default.WhatsApp, contentDescription = "Kirim WhatsApp")
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -160,5 +196,17 @@ fun TagihanScreen(
                 }
             }
         }
+    }
+}
+
+private fun openWhatsApp(context: Context, url: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    } catch (_: Exception) {
+        Toast.makeText(
+            context,
+            "Gagal membuka WhatsApp. Pastikan aplikasi WhatsApp tersedia.",
+            Toast.LENGTH_LONG
+        ).show()
     }
 }
