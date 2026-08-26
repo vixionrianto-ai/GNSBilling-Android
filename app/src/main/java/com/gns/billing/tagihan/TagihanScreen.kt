@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.WhatsApp
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -186,7 +186,7 @@ fun TagihanScreen(
                                         if (waLoadingId == tagihan.id) {
                                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                                         } else {
-                                            Icon(Icons.Default.WhatsApp, contentDescription = "Kirim WhatsApp")
+                                            Icon(Icons.Default.Send, contentDescription = "Kirim WhatsApp")
                                         }
                                     }
                                 }
