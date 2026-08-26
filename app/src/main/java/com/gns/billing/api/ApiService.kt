@@ -3,7 +3,7 @@ package com.gns.billing.api
 import com.gns.billing.model.*
 import com.gns.billing.tagihan.DetailTagihanResponse
 import com.gns.billing.tagihan.TagihanResponse
-import okhttp3.ResponseBody
+import com.gns.billing.tagihan.TagihanWhatsappResponse
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -32,7 +32,7 @@ interface ApiService {
     @POST("tagihan/generate-periode") suspend fun generatePeriodeTagihan(): MessageResponse
     @POST("tagihan/{tagihan}/regenerate") suspend fun regenerateTagihan(@Path("tagihan") id: Int): MessageResponse
     @POST("tagihan/maintenance") suspend fun maintenanceTagihan(): MessageResponse
-    @GET("tagihan/{tagihan}/whatsapp") suspend fun getTagihanWhatsApp(@Path("tagihan") id: Int): MessageResponse
+    @GET("tagihan/{tagihan}/whatsapp") suspend fun getTagihanWhatsApp(@Path("tagihan") id: Int): TagihanWhatsappResponse
 
     @GET("pembayaran") suspend fun getPembayaranHistory(@Query("page") page: Int = 1, @Query("search") search: String? = null): PembayaranHistoryResponse
     @GET("pembayaran/{id}") suspend fun getDetailPembayaran(@Path("id") id: Int): PembayaranDetailResponse
