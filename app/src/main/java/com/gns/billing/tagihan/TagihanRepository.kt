@@ -17,4 +17,7 @@ class TagihanRepository {
         status: String? = null,
         search: String? = null
     ): TagihanResponse = RetrofitClient.api.getSemuaTagihan(page, status, search)
+
+    suspend fun getTagihanWhatsApp(id: Int): TagihanWhatsappResponse =
+        RetrofitClient.api.getTagihanWhatsApp(id)
 }
