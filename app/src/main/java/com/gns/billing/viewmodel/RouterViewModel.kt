@@ -9,6 +9,8 @@ import com.gns.billing.repository.RouterRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.HttpException
 
 class RouterViewModel : ViewModel() {
     private val repository = RouterRepository()
@@ -40,9 +42,10 @@ class RouterViewModel : ViewModel() {
         _loading.value = true
         _connectionMessage.value = null
         try {
-            _connectionMessage.value = repository.testRouter(routerId).message ?: "Tes koneksi selesai."
+            val response = repository.testRouter(routerId)
+            _connectionMessage.value = response.message ?: "Tes koneksi selesai."
         } catch (e: Exception) {
-            _connectionMessage.value = e.localizedMessage ?: "Gagal menguji koneksi."
+            _connectionMessage.value = parseHttpError(e, "Gagal menguji koneksi MikroTik.")
         } finally {
             _loading.value = false
         }
@@ -52,7 +55,7 @@ class RouterViewModel : ViewModel() {
         try {
             _profiles.value = repository.getProfiles(routerId).data
         } catch (e: Exception) {
-            _connectionMessage.value = e.localizedMessage ?: "Gagal memuat profile."
+            _connectionMessage.value = parseHttpError(e, "Gagal memuat profile.")
         }
     }
 
@@ -60,7 +63,7 @@ class RouterViewModel : ViewModel() {
         try {
             onResult(repository.getSecrets(routerId).data)
         } catch (e: Exception) {
-            _connectionMessage.value = e.localizedMessage ?: "Gagal memuat PPP Secret."
+            _connectionMessage.value = parseHttpError(e, "Gagal memuat PPP Secret.")
         }
     }
 
@@ -76,7 +79,7 @@ class RouterViewModel : ViewModel() {
             val r = repository.createSecret(routerId, username, password, profile, service)
             onResult(r.success, r.message ?: "Operasi selesai.")
         } catch (e: Exception) {
-            onResult(false, e.localizedMessage ?: "Gagal terhubung ke server.")
+            onResult(false, parseHttpError(e, "Gagal terhubung ke server."))
         }
     }
 
@@ -94,7 +97,7 @@ class RouterViewModel : ViewModel() {
             val r = repository.updateSecret(routerId, secret, username, password, profile, service)
             onResult(r.success, r.message ?: "Operasi selesai.")
         } catch (e: Exception) {
-            onResult(false, e.localizedMessage ?: "Gagal memperbarui secret.")
+            onResult(false, parseHttpError(e, "Gagal memperbarui secret."))
         }
     }
 
@@ -115,8 +118,22 @@ class RouterViewModel : ViewModel() {
             val r = action()
             onResult(r.success, r.message ?: "Operasi selesai.")
         } catch (e: Exception) {
-            onResult(false, e.localizedMessage ?: "Gagal terhubung ke server.")
+            onResult(false, parseHttpError(e, "Gagal terhubung ke server."))
         }
+    }
+
+    private fun parseHttpError(error: Exception, fallback: String): String {
+        if (error is HttpException) {
+            return try {
+                val body = error.response()?.errorBody()?.string()
+                JSONObject(body ?: "{}").optString("message").ifBlank {
+                    "$fallback (HTTP ${error.code()})"
+                }
+            } catch (_: Exception) {
+                "$fallback (HTTP ${error.code()})"
+            }
+        }
+        return error.localizedMessage ?: fallback
     }
 
     fun clearMessage() {
