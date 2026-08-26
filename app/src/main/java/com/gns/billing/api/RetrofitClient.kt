@@ -11,7 +11,8 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // PC/Laragon yang melayani GNS_DEV pada jaringan lokal.
-    private const val BASE_URL = "http://192.168.1.12/GNS_DEV/public/api/v1/"
+    // Laravel route prefix yang aktif adalah /api, bukan /api/v1.
+    private const val BASE_URL = "http://192.168.1.12/GNS_DEV/public/api/"
 
     private lateinit var retrofit: Retrofit
 
